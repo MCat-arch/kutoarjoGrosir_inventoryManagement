@@ -30,13 +30,15 @@ class DatabaseHelper {
         role TEXT NOT NULL,
         phone TEXT,
         email TEXT,
-        address TEXT,
+        alamat TEXT,
+        image_path TEXT,
         balance REAL DEFAULT 0,
-        last_transaction_date TEXT,
-        is_synced INTEGER DEFAULT 0,
-        is_deleted INTEGER DEFAULT 0
+        last_transaction_date TEXT
       )
     ''');
+
+    //     is_synced INTEGER DEFAULT 0,
+    // is_deleted INTEGER DEFAULT 0
 
     // 2. Products
     await db.execute('''

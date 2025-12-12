@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kg/models/enums.dart';
 import 'package:kg/models/party_role.dart';
-import 'package:kg/pages/party/add_party_page.dart';
-import 'package:kg/pages/party/detail_party.dart';
+import 'package:kg/ui/party/add_party_page.dart';
+import 'package:kg/ui/party/detail_party.dart';
 import 'package:kg/providers/party_provider.dart';
 import 'package:kg/ui/pihak/buildPartyCard.dart';
 import 'package:kg/utils/colors.dart';
@@ -28,43 +28,6 @@ class _PartyPagesState extends State<PartyPages> {
       Provider.of<PartyProvider>(context, listen: false).loadParties();
     });
   }
-
-  // final List<PartyModel> _allParties = [
-  //   PartyModel(
-  //     id: '1',
-  //     name: 'Transaksi Tunai',
-  //     role: PartyRole.OTHER,
-  //     email: 'kucing.oranye7@gmail.com',
-  //     balance: 0,
-  //     lastTransactionDate: DateTime.now(),
-  //   ),
-  //   PartyModel(
-  //     id: '2',
-  //     name: 'cust2',
-  //     role: PartyRole.CUSTOMER,
-  //     balance: 0,
-  //     lastTransactionDate: DateTime(2025, 12, 05),
-  //   ),
-  //   PartyModel(
-  //     id: '3',
-  //     name: 'consumer 1',
-  //     role: PartyRole.CUSTOMER,
-  //     balance: -123000, // Negatif artinya ada tagihan/hutang
-  //     lastTransactionDate: DateTime(2025, 12, 04),
-  //   ),
-  // ];
-
-  // Logic Filter & Sort
-  // List<PartyModel> get filteredParties {
-  //   return _allParties.where((p) {
-  //     final matchName = p.name.toLowerCase().contains(
-  //       _searchQuery.toLowerCase(),
-  //     );
-  //     final matchRole = selectedRole == null || p.role == selectedRole;
-
-  //     return matchName && matchRole;
-  //   }).toList();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +132,7 @@ class _PartyPagesState extends State<PartyPages> {
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     itemBuilder: (c, i) {
-                      return GestureDetector(
+                      return InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
@@ -179,7 +142,7 @@ class _PartyPagesState extends State<PartyPages> {
                             ),
                           );
                         },
-                        child: buildPartyCard(filteredParties[i]),
+                        child: buildPartyCard(filteredParties[i], context),
                       );
                     },
                     itemCount: filteredParties.length,

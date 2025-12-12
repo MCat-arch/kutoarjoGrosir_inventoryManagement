@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:kg/ui/party/add_party_page.dart';
+import 'package:kg/ui/inventory/add_product.dart';
+import 'package:kg/utils/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:kg/models/model_produk.dart';
 import 'package:kg/models/enums.dart';
@@ -60,9 +63,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: backgroundAppBar,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -194,6 +197,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       ),
               ),
             ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddProductPage()),
           );
         },
       ),

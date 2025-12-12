@@ -392,11 +392,6 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                           ),
                         ),
                         const SizedBox(width: 5),
-                        const Icon(
-                          Icons.emoji_events,
-                          color: Colors.amber,
-                          size: 16,
-                        ), // Icon Mahkota
                       ],
                     ),
                   ),

@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:kg/models/enums.dart';
 import 'package:kg/models/party_role.dart';
@@ -23,6 +26,7 @@ class _AddPartyPageState extends State<AddPartyPage> {
   PartyRole selectedRole = PartyRole.CUSTOMER;
   int activeTab = 0; // detail tambahan
   DateTime _selectedDate = DateTime.now();
+  String? selectedImg;
 
   bool isReceivable = true;
 
@@ -51,6 +55,7 @@ class _AddPartyPageState extends State<AddPartyPage> {
       role: selectedRole,
       phone: _phoneCtrl.text,
       email: _emailCtrl.text,
+      imagePath: selectedImg,
       balance: finalBalance,
       lastTransactionDate: _selectedDate,
       // address: _addressCtrl.text, // Jika di model sudah ada field address
@@ -67,6 +72,12 @@ class _AddPartyPageState extends State<AddPartyPage> {
         context,
       ).showSnackBar(SnackBar(content: Text("Gagal menyimpan: $e")));
     }
+  }
+
+  void _pickImg() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) setState(() => selectedImg = image.path);
   }
 
   @override
@@ -99,30 +110,33 @@ class _AddPartyPageState extends State<AddPartyPage> {
                         CircleAvatar(
                           radius: 45,
                           backgroundColor: Color.fromARGB(116, 15, 29, 215),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.person,
-                              size: 50,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              //TODO MENAMBAHKAN FOTO DARI GALERI UNTUK AVATAR PARTY
-                            },
-                          ),
+                          backgroundImage: selectedImg != null
+                              ? FileImage(File(selectedImg!))
+                              : null,
+                          child: selectedImg == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 20,
+                                  color: Colors.white,
+                                )
+                              : null,
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
-                          child: Container(
-                            padding: EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF27AE60),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 16,
+                          child: GestureDetector(
+                            onTap: _pickImg,
+                            child: Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF27AE60),
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                onPressed: _pickImg,
+                                icon: Icon(Icons.camera_alt),
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),

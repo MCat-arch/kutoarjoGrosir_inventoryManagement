@@ -50,7 +50,7 @@ class PartyService {
     );
 
     if (result.isNotEmpty) {
-      double oldBalance = result.first['balance'] as double;
+      double oldBalance = (result.first['balance'] as num).toDouble();
       double newBalance;
       if (isAdd) {
         newBalance = oldBalance + amount;

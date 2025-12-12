@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:kg/models/enums.dart';
 import 'package:kg/models/keuangan_model.dart';
+import 'package:kg/services/pdf_report_service.dart';
 import 'package:kg/ui/pihak/buildTransactionCard.dart';
 import 'package:kg/utils/colors.dart';
 import 'package:kg/widgets/card_history_transaksi.dart';
 import 'package:kg/widgets/transaction_menu_sheet.dart';
+import 'package:kg/providers/transaksi_provider.dart';
 
 class HistoryKeuangan extends StatefulWidget {
   const HistoryKeuangan({super.key});
@@ -16,72 +19,40 @@ class HistoryKeuangan extends StatefulWidget {
 
 class _HistoryKeuanganState extends State<HistoryKeuangan> {
   final dateFormat = DateFormat('dd MMM yyyy . HH:mm');
-
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = "";
   List<String> period = ["Sepanjang tahun", "Harian", "Mingguan", "Bulanan"];
   String _selectedPeriod = "Harian";
 
-  late List<TransactionModel> _allTransactions;
   @override
   void initState() {
     super.initState();
-    _generateDummyData();
+    // Load transactions once the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<TransactionProvider>(
+        context,
+        listen: false,
+      ).loadTransactions();
+    });
   }
 
-  void _generateDummyData() {
-    _allTransactions = [
-      TransactionModel(
-        id: '1',
-        trxNumber: '#INV-005',
-        time: DateTime.now().subtract(const Duration(hours: 1)),
-        typeTransaksi: trxType.SALE, // Penjualan
-        partyName: 'Budi Santoso',
-        totalAmount: 150000,
-        paidAmount: 150000,
-      ),
-      TransactionModel(
-        id: '2',
-        trxNumber: '#EXP-003',
-        time: DateTime.now().subtract(const Duration(hours: 5)),
-        typeTransaksi: trxType.EXPENSE, // Pengeluaran
-        partyName: 'PLN (Listrik)',
-        totalAmount: 350000,
-        paidAmount: 350000,
-      ),
-      TransactionModel(
-        id: '3',
-        trxNumber: '#PUR-002',
-        time: DateTime.now().subtract(const Duration(days: 1)),
-        typeTransaksi: trxType.PURCHASE, // Pembelian Stok
-        partyName: 'Toko Kain Abadi',
-        totalAmount: 2000000,
-        paidAmount: 0, // Belum Lunas
-      ),
-      TransactionModel(
-        id: '4',
-        trxNumber: '#INC-001',
-        time: DateTime.now().subtract(const Duration(days: 2)),
-        typeTransaksi: trxType.INCOME_OTHER, // Uang Masuk Lain
-        partyName: 'Budi Santoso',
-        totalAmount: 50000,
-        paidAmount: 50000,
-      ),
-    ];
-  }
-
-  List<TransactionModel> get filteredTransaction {
-    if (_searchQuery.isEmpty) return _allTransactions;
-    return _allTransactions.where((trx) {
-      final query = _searchQuery.toLowerCase();
-      final matchName = (trx.partyName ?? "").toLowerCase().contains(query);
-      final matchNo = trx.trxNumber.toLowerCase().contains(query);
-      return matchName || matchNo;
+  List<TransactionModel> _applySearchFilter(List<TransactionModel> list) {
+    if (_searchQuery.isEmpty) return list;
+    final q = _searchQuery.toLowerCase();
+    return list.where((trx) {
+      final matchName = (trx.partyName ?? "").toLowerCase().contains(q);
+      final matchNo = trx.trxNumber.toLowerCase().contains(q);
+      final matchDesc = (trx.description ?? "").toLowerCase().contains(q);
+      return matchName || matchNo || matchDesc;
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final txnProvider = Provider.of<TransactionProvider>(context);
+    final List<TransactionModel> allTransactions = txnProvider.transactions;
+    final filtered = _applySearchFilter(allTransactions);
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -93,10 +64,7 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.tune,
-              color: Colors.black,
-            ), // Icon Filter Advanced
+            icon: const Icon(Icons.tune, color: Colors.black),
             onPressed: () {
               // TODO: Show Filter BottomSheet (Jenis Transaksi, Status Lunas, dll)
             },
@@ -107,7 +75,7 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
         children: [
           Container(
             color: container,
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Row(
               children: [
                 Expanded(
@@ -129,20 +97,22 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 10),
-                // Tombol Download Laporan
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: IconButton(
-                    icon: const Icon(
-                      Icons.download_rounded,
-                      color: Colors.black54,
-                    ),
-                    onPressed: () {},
+                    icon: const Icon(Icons.print),
+                    onPressed: () {
+                      // Panggil Service PDF menggunakan data yang ada saat ini
+                      PdfReportService().printTransactionReport(
+                        allTransactions,
+                        DateTime.now().subtract(const Duration(days: 30)),
+                        DateTime.now(),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -151,7 +121,7 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
 
           Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: Colors.grey.shade100)),
@@ -168,7 +138,7 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _selectedPeriod!,
+                      _selectedPeriod,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -177,14 +147,16 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
                   ],
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // TODO: Ubah periode filter
+                  },
                   style: TextButton.styleFrom(
                     foregroundColor: const Color(0xFF27AE60),
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(50, 30),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: Text(
+                  child: const Text(
                     "Ubah",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -192,31 +164,43 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
               ],
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
+          // Body: loading / empty / list
           Expanded(
-            child: filteredTransaction.isEmpty
+            child: txnProvider.isLoading && allTransactions.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : filtered.isEmpty
                 ? _buildEmptyState()
-                : ListView.builder(
-                    padding: EdgeInsets.all(16),
-                    itemCount: filteredTransaction.length,
-                    itemBuilder: (context, index) {
-                      return HistoryTransactionCard(filteredTransaction[index]);
-                    },
+                : RefreshIndicator(
+                    onRefresh: () => txnProvider.loadTransactions(),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        return HistoryTransactionCard(filtered[index]);
+                      },
+                    ),
                   ),
           ),
         ],
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF27AE60), // Hijau utama
+        backgroundColor: const Color(0xFF27AE60),
         child: const Icon(Icons.add, color: Colors.white, size: 28),
-        onPressed: () {
-          showModalBottomSheet(
+        onPressed: () async {
+          // Buka menu transaksi, lalu reload jika user menambah sesuatu
+          await showModalBottomSheet(
             context: context,
-            isScrollControlled: true, // Supaya bisa tinggi
-            backgroundColor: Colors.transparent, // Agar rounded corner terlihat
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
             builder: (context) => const TransactionMenuSheet(),
           );
+          // Setelah sheet ditutup, reload transaksi
+          await Provider.of<TransactionProvider>(
+            context,
+            listen: false,
+          ).loadTransactions();
         },
       ),
     );

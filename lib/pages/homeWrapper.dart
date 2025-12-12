@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kg/pages/home.dart';
 import 'package:kg/pages/laporan_keuangan.dart';
 import 'package:kg/pages/list_produk.dart';
-import 'package:kg/pages/party/party_pages.dart';
+import 'package:kg/pages/party_pages.dart';
 import 'package:kg/utils/colors.dart';
 
 class Homewrapper extends StatefulWidget {
@@ -13,17 +13,16 @@ class Homewrapper extends StatefulWidget {
 }
 
 class _HomewrapperState extends State<Homewrapper> {
-  bool _initialized = false;
   int _selectedIndex = 0;
 
-  final List<Widget> pages = [
+  final List<Widget> _pages = const [
     HomeScreen(),
     InventoryScreen(),
     HistoryKeuangan(),
     PartyPages(),
   ];
 
-  void onNavTap(index) {
+  void _onNavTap(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -33,26 +32,30 @@ class _HomewrapperState extends State<Homewrapper> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: pages[_selectedIndex],
-      bottomNavigationBar: navbar(_selectedIndex, onNavTap),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
-  Widget navbar(int currentIndex, ValueChanged<int> onTap) {
+  Widget _buildBottomNavBar() {
     return BottomNavigationBar(
-      backgroundColor: const Color.fromARGB(197, 2, 70, 255),
-      currentIndex: currentIndex,
-      onTap: onTap,
-      items: [
+      backgroundColor: Colors.white,
+      currentIndex: _selectedIndex,
+      onTap: _onNavTap,
+      selectedItemColor: const Color(0xFF27AE60),
+      unselectedItemColor: Colors.grey[500],
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
+      items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: "Home"),
         BottomNavigationBarItem(
           icon: Icon(Icons.inventory_2_rounded),
           label: "Inventory",
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: "Transaksi"),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_2_sharp),
-          label: "Party",
+          label: "Pihak",
         ),
       ],
     );

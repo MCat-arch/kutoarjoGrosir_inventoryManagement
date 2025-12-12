@@ -1,28 +1,27 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:kg/pages/home.dart';
 import 'package:kg/pages/homeWrapper.dart';
+import 'package:kg/pages/laporan_keuangan.dart';
 import 'package:kg/providers/category_provider.dart';
 import 'package:kg/providers/inventory_provider.dart';
 import 'package:kg/providers/party_provider.dart';
 import 'package:kg/providers/transaksi_provider.dart';
 import 'package:kg/services/sync_service.dart';
+import 'package:kg/ui/inventory/add_product.dart';
 import 'package:provider/provider.dart';
 import 'package:workmanager/workmanager.dart';
 
-// 1. DEFINISI TASK NAME
 const String taskName = "syncDataTask";
 
-// 2. CALLBACK DISPATCHER (Harus Top-Level Function / Static)
-// Ini berjalan di Isolate terpisah (Background Thread)
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    // Karena ini thread baru, kita harus inisialisasi Firebase lagi
-    await Firebase.initializeApp();
-
     try {
+      await Firebase.initializeApp();
       final syncService = SyncService();
       await syncService.syncData();
+      print("Background Sync Success");
       return Future.value(true);
     } catch (err) {
       print("Background Sync Failed: $err");
@@ -31,27 +30,40 @@ void callbackDispatcher() {
   });
 }
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
 
-  // 3. INISIALISASI WORKMANAGER
-  await Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: true, // Set false jika rilis production
-  );
+  try {
+    // Initialize Firebase dengan timeout agar tidak hang
+    await Firebase.initializeApp().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        print("Firebase init timeout, continuing anyway");
+        throw "error";
+      },
+    );
+  } catch (e) {
+    print("Firebase init error: $e, continuing...");
+  }
 
-  // 4. JADWALKAN TASK (Periodic)
-  // Android minimal interval 15 menit
-  await Workmanager().registerPeriodicTask(
-    "unique_sync_task",
-    taskName,
-    frequency: const Duration(minutes: 15),
-    constraints: Constraints(
-      networkType: NetworkType.connected, // Hanya jalan jika ada internet
-    ),
-  );
-  // await Firebase.initializeApp();
+  // Inisialisasi Workmanager (opsional, bisa di-comment jika error)
+  try {
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: false, // Set ke false untuk production
+    );
+
+    // Jadwalkan periodic sync (optional)
+    await Workmanager().registerPeriodicTask(
+      "unique_sync_task",
+      taskName,
+      frequency: const Duration(minutes: 15),
+      constraints: Constraints(networkType: NetworkType.connected),
+    );
+  } catch (e) {
+    print("Workmanager init error: $e");
+  }
+
   runApp(
     MultiProvider(
       providers: [
@@ -70,18 +82,22 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      routes: {
+        '/' : (context) => const Homewrapper(),
+        '/home': (context) => const HomeScreen(),
+        '/transaction' : (context) => const HistoryKeuangan(),
+        '/add-product' : (context) => const AddProductPage(),
+      },
       debugShowCheckedModeBanner: false,
-      home: Scaffold(body: Homewrapper()),
+      theme: ThemeData(useMaterial3: true, primarySwatch: Colors.blue),
+      initialRoute: '/',
     );
   }
 }
 
+//halaman home masih statis
+// error di add pihak 
 
-// widget transaksi generic transaction belum menangani semua type transaksi (hanya expense tidak dengan pemasukan)
-// add to cart ketika menambahkan barang di generic transaction (sehingga berkurang)
+// keuntungan bersih di home harusnya hpp - expense
 
-
-// tambahkan ke firestore
-// workamanger untuk sync automatically
-// print laporan dalam bentuk pdf
