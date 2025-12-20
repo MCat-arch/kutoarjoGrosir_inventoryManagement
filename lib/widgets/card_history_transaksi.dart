@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/keuangan_model.dart';
+import 'package:kg/models/transaction_model.dart';
+import 'package:kg/ui/transaction/generic_transaction_form.dart';
 import 'package:kg/widgets/produk_detail.dart';
 
-Widget HistoryTransactionCard(TransactionModel trx) {
+Widget HistoryTransactionCard(TransactionModel trx, context) {
   // Logic Tampilan berdasarkan Tipe
   String typeLabel = "";
   Color typeColor = Colors.black;
@@ -46,7 +47,7 @@ Widget HistoryTransactionCard(TransactionModel trx) {
   bool isLunas = trx.isLunas;
 
   return Container(
-    margin:  EdgeInsets.only(bottom: 12),
+    margin: EdgeInsets.only(bottom: 12),
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(12),
@@ -64,7 +65,15 @@ Widget HistoryTransactionCard(TransactionModel trx) {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // TODO: Buka Detail Transaksi
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (ctx) => GenericTransactionForm(
+                type: trx.typeTransaksi,
+                editData: trx, // Pass data untuk edit
+              ),
+            ),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -128,13 +137,10 @@ Widget HistoryTransactionCard(TransactionModel trx) {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                         SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           DateFormat().format(trx.time),
-                          style:  TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],
                     ),

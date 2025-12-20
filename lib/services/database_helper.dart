@@ -33,12 +33,10 @@ class DatabaseHelper {
         alamat TEXT,
         image_path TEXT,
         balance REAL DEFAULT 0,
-        last_transaction_date TEXT
+        last_transaction_date TEXT,
+        is_synced INTEGER DEFAULT 0
       )
     ''');
-
-    //     is_synced INTEGER DEFAULT 0,
-    // is_deleted INTEGER DEFAULT 0
 
     // 2. Products
     await db.execute('''
@@ -50,6 +48,7 @@ class DatabaseHelper {
         category TEXT,
         shopee_item_id INTEGER,
         supplier_id TEXT,
+        is_synced INTEGER DEFAULT 0,
         FOREIGN KEY (supplier_id) REFERENCES parties (id)
       )
     ''');
@@ -67,10 +66,18 @@ class DatabaseHelper {
         price REAL DEFAULT 0,
         
         safety_stock INTEGER DEFAULT 0,
+        harga_produksi REAL DEFAULT 0,
         sold_count INTEGER DEFAULT 0,
         status TEXT,
         
         shopee_model_id INTEGER,
+        is_synced INTEGER DEFAULT 0,
+        
+        abc_category TEXT,
+        daily_burn_rate REAL,
+        recommended_stock INTEGER,
+        last_analyzed TEXT,
+
         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
       )
     ''');
@@ -103,6 +110,7 @@ class DatabaseHelper {
         qty INTEGER NOT NULL,
         cost_at_moment REAL NOT NULL,
         price_at_moment REAL NOT NULL,
+        is_synced INTEGER DEFAULT 0,
         FOREIGN KEY (transaction_id) REFERENCES transactions (id) ON DELETE CASCADE,
         FOREIGN KEY (variant_id) REFERENCES variants (id)
       )
@@ -118,6 +126,7 @@ class DatabaseHelper {
         amount REAL NOT NULL,
         description TEXT,
         created_at TEXT,
+        is_synced INTEGER DEFAULT 0,
         FOREIGN KEY (transaction_id) REFERENCES transactions (id)
       )
     ''');
@@ -135,6 +144,7 @@ class DatabaseHelper {
       type TEXT NOT NULL, -- 'MANUAL_EDIT', 'TRANSACTION_SALE', 'TRANSACTION_PURCHASE'
       description TEXT,
       created_at TEXT NOT NULL,
+      is_synced INTEGER DEFAULT 0,
       FOREIGN KEY (variant_id) REFERENCES variants (id) ON DELETE CASCADE
     )
   ''');
@@ -144,7 +154,7 @@ class DatabaseHelper {
       CREATE TABLE account_categories (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        type TEXT NOT NULL -- 'INCOME' atau 'EXPENSE'
+        type TEXT NOT NULL -- 'INCOME' or 'EXPENSE'
       )
     ''');
   }

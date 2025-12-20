@@ -1,6 +1,6 @@
 // Class pembantu untuk data khusus Shopee (Online)
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/model_produk.dart';
+import 'package:kg/models/produk_model.dart';
 
 class ShopeeVariantData {
   final int? id; // Model ID dari Shopee

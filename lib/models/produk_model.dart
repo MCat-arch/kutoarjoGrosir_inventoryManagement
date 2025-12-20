@@ -1,7 +1,7 @@
 // file: lib/models/product_model.dart
 
 import 'package:kg/models/enums.dart'; // Enum ShopeeItemStatus
-import 'package:kg/models/produk.dart';
+import 'package:kg/models/variant_model.dart';
 
 class ProductModel {
   final String id; // Firestore Doc ID
@@ -13,7 +13,8 @@ class ProductModel {
 
   // Data Bisnis (Dipindahkan dari variant agar tidak duplikat)
   final String categoryName; // "Kemeja", "Celana"
-  final String supplierName; // "Pak Budi Tailor"
+  final String supplierId; // "Pak Budi Tailor"
+  final String? supplierName;
 
   // Data Shopee (Parent Level)
   final int? shopeeItemId;
@@ -29,7 +30,8 @@ class ProductModel {
     required this.description,
     this.mainImageUrl,
     required this.categoryName,
-    required this.supplierName,
+    required this.supplierId,
+    this.supplierName,
     this.shopeeItemId,
     required this.shopeeStatus,
     required this.variants,
@@ -70,7 +72,8 @@ class ProductModel {
       description: map['description'] ?? '',
       mainImageUrl: map['main_image_url'],
       categoryName: map['category_name'] ?? 'Umum',
-      supplierName: map['supplier_name'] ?? 'Unknown',
+      supplierId: map['supplier_id'] ?? 'Unknown',
+      supplierName: map['supplier_name'],
       shopeeItemId: map['shopee_item_id'],
 
       // Enum Parsing
@@ -93,6 +96,7 @@ class ProductModel {
       'description': description,
       'main_image_url': mainImageUrl,
       'category_name': categoryName,
+      'supplier_id': supplierId,
       'supplier_name': supplierName,
       'shopee_item_id': shopeeItemId,
       'shopee_status': shopeeStatus.toString().split('.').last,
@@ -107,6 +111,7 @@ class ProductModel {
     String? description,
     String? mainImageUrl,
     String? categoryName,
+    String? supplierId,
     String? supplierName,
     int? shoppeItemId,
     ShopeeItemStatus? shopeeStatus,
@@ -119,6 +124,7 @@ class ProductModel {
       description: description ?? this.description,
       mainImageUrl: mainImageUrl ?? this.mainImageUrl,
       categoryName: categoryName ?? this.categoryName,
+      supplierId: supplierId ?? this.supplierId,
       supplierName: supplierName ?? this.supplierName,
       shopeeStatus: shopeeStatus ?? this.shopeeStatus,
       variants: variants ?? this.variants,

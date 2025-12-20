@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/keuangan_model.dart';
+import 'package:kg/models/transaction_model.dart';
 import 'package:kg/models/party_role.dart';
 import 'package:kg/providers/party_provider.dart';
 import 'package:kg/providers/transaksi_provider.dart';
@@ -256,8 +256,10 @@ class _DetailPartyState extends State<DetailParty> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (c) =>
-                          GenericTransactionForm(type: trxType.UANG_MASUK),
+                      builder: (c) => GenericTransactionForm(
+                        type: trxType.UANG_MASUK,
+                        editData: null,
+                      ),
                     ),
                   );
                   // Reload setelah kembali
@@ -314,8 +316,10 @@ class _DetailPartyState extends State<DetailParty> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (c) =>
-                          GenericTransactionForm(type: trxType.UANG_KELUAR),
+                      builder: (c) => GenericTransactionForm(
+                        type: trxType.UANG_KELUAR,
+                        editData: null,
+                      ),
                     ),
                   );
                   // Reload setelah kembali
@@ -405,7 +409,9 @@ class _DetailPartyState extends State<DetailParty> {
   Future<void> _navigateToTransaction(trxType type) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (c) => GenericTransactionForm(type: type)),
+      MaterialPageRoute(
+        builder: (c) => GenericTransactionForm(type: type, editData: null),
+      ),
     );
     // Reload setelah kembali
     if (mounted) {

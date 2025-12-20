@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart'; // Wajib import untuk Grafik
 import 'package:intl/intl.dart';
+import 'package:kg/pages/analysis_page.dart';
 import 'package:kg/pages/list_produk.dart';
 import 'package:kg/providers/inventory_provider.dart';
 import 'package:kg/providers/party_provider.dart';
@@ -50,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: HomeWidget.buildAppBar(),
+      appBar: HomeWidget.buildAppBar(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 24),
         child: Column(
@@ -108,43 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 24),
 
             // 4. RINGKASAN GUDANG (INVENTORY)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Ringkasan Gudang",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => InventoryScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text("Lihat Semua"),
-                  ),
-                ],
-              ),
-            ),
-            Consumer<InventoryProvider>(
-              builder: (context, inventoryProvider, _) {
-                final assetValue = _homeService.calculateTotalAssetValue(
-                  inventoryProvider.products,
-                );
-                final lowStock = _homeService.countLowStock(
-                  inventoryProvider.products,
-                );
-                return HomeWidget.buildInventorySummary(
-                  assetValue: assetValue,
-                  lowStockCount: lowStock,
-                );
-              },
-            ),
+            InventoryAnalysisPage(),
           ],
         ),
       ),

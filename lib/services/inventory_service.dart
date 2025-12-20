@@ -1,5 +1,5 @@
-import 'package:kg/models/model_produk.dart';
-import 'package:kg/models/produk.dart';
+import 'package:kg/models/produk_model.dart';
+import 'package:kg/models/variant_model.dart';
 import 'package:kg/models/stock_history.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:kg/services/database_helper.dart';
@@ -24,8 +24,7 @@ class InventoryService {
         'image_url': product.mainImageUrl,
         'category': product.categoryName,
         'shopee_item_id': product.shopeeItemId,
-        'supplier_id': product
-            .supplierName, // Idealnya ini ID supplier, tapi kita pakai nama dulu sesuai model
+        'supplier_id': product.supplierId,
         // 'shopee_status': product.shopeeStatus.toString() // Jika ada kolom status di header
       });
 
@@ -43,7 +42,11 @@ class InventoryService {
     final db = await _db;
 
     // Kita ambil semua produk dulu
-    final productRows = await db.query('products');
+    final productRows = await db.rawQuery('''
+  SELECT p.*, pt.name as supplier_name
+  FROM products p
+  LEFT JOIN parties pt ON p.supplier_id = pt.id
+''');
 
     List<ProductModel> results = [];
 
@@ -70,9 +73,10 @@ class InventoryService {
           description: pRow['description'] as String? ?? '',
           mainImageUrl: pRow['image_url'] as String?,
           categoryName: pRow['category'] as String? ?? 'Umum',
-          supplierName:
+          supplierId:
               pRow['supplier_id'] as String? ??
               'Unknown', // Mapping supplier_id ke name
+          supplierName: pRow['supplier_name'] as String,
           shopeeItemId: pRow['shopee_item_id'] as int?,
           shopeeStatus: ShopeeItemStatus
               .NORMAL, // Default, atau ambil dari DB jika kolomnya ditambah
@@ -101,7 +105,8 @@ class InventoryService {
           'description': product.description,
           'image_url': product.mainImageUrl,
           'category': product.categoryName,
-          'supplier_id': product.supplierName,
+          'supplier_id': product.supplierId,
+          'is_synced': 0,
         },
         where: 'id = ?',
         whereArgs: [product.id],
@@ -150,16 +155,20 @@ class InventoryService {
       'cogs': variant.warehouseData.cogs,
       'price': variant.warehouseData.offlinePrice,
 
+      'safety_stock': variant.warehouseData.safetyStock,
+      'harga_produksi': variant.warehouseData.hargaProduksi,
+      'sold_count': variant.warehouseData.soldCount,
+      'status': variant.warehouseData.status.toString(),
+
       // Data Shopee (Mapping seadanya sesuai tabel)
       'shopee_model_id': variant.shopeeData?.id,
+      'is_synced': 0,
 
-      // KOLOM TAMBAHAN (Sesuai request model Anda,
-      // PASTIKAN ANDA MENAMBAH KOLOM INI DI DATABASE_HELPER JIKA BELUM)
-      // Jika kolom belum ada di DB, hapus baris di bawah ini agar tidak error
-      // 'safety_stock': variant.warehouseData.safetyStock,
-      // 'harga_produksi': variant.warehouseData.hargaProduksi,
-      // 'status': variant.warehouseData.status.toString(),
-      // 'sold_count': variant.warehouseData.soldCount,
+      // KOLOM TAMBAHAN UNTUK SMART ANALYSIS (Default value karena model belum punya)
+      'abc_category': 'Unknown', // Default kategori ABC
+      'daily_burn_rate': 0.0, // Default burn rate
+      'recommended_stock': 0, // Default rekomendasi stok
+      'last_analyzed': null, // Default null (belum dianalisis)
     };
   }
 
@@ -177,10 +186,12 @@ class InventoryService {
 
         // Data yang mungkin belum ada di tabel variants saat ini (Default Value)
         safetyStock: row['safety_stock'] ?? 0,
-        hargaProduksi: (row['cogs'] ?? 0)
-            .toDouble(), // Asumsi harga produksi ~ cogs jika null
-        status: StatusProduk.NORMAL, // Default
-        soldCount: 0,
+        hargaProduksi: (row['harga_produksi'] ?? 0).toDouble(),
+        status: StatusProduk.values.firstWhere(
+          (e) => e.toString().split('.').last == (row['status'] ?? 'NORMAL'),
+          orElse: () => StatusProduk.NORMAL,
+        ),
+        soldCount: row['sold_count'] ?? 0,
       ),
       // Reconstruct Shopee Data (Nullable)
       shopeeData: row['shopee_model_id'] != null
@@ -210,7 +221,8 @@ class InventoryService {
           'description': newproduct.description,
           'image_url': newproduct.mainImageUrl,
           'category': newproduct.categoryName,
-          'supplier_id': newproduct.supplierName,
+          'supplier_id': newproduct.supplierId,
+          'is_synced': 0,
         },
         where: 'id = ?',
         whereArgs: [newproduct.id],

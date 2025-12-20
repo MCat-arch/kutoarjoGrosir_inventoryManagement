@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/keuangan_model.dart';
+import 'package:kg/models/transaction_model.dart';
 import 'package:kg/services/pdf_report_service.dart';
 import 'package:kg/ui/pihak/buildTransactionCard.dart';
 import 'package:kg/utils/colors.dart';
@@ -177,7 +177,7 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
                       padding: const EdgeInsets.all(16),
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
-                        return HistoryTransactionCard(filtered[index]);
+                        return HistoryTransactionCard(filtered[index], context);
                       },
                     ),
                   ),

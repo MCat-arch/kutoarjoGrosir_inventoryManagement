@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/keuangan_model.dart';
+import 'package:kg/models/transaction_model.dart';
 
 
 // --- WIDGET ITEM TRANSAKSI ---

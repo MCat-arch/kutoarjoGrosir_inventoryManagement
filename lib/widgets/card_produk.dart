@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kg/pages/list_produk.dart';
-import 'package:kg/models/model_produk.dart';
+import 'package:kg/models/produk_model.dart';
 import 'package:kg/widgets/produk_detail.dart';
 
 // WIDGET CARD PRODUK (GRID ITEM)

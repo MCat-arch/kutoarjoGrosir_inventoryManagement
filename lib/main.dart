@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:kg/firebase_options.dart';
 import 'package:kg/pages/home.dart';
 import 'package:kg/pages/homeWrapper.dart';
 import 'package:kg/pages/laporan_keuangan.dart';
@@ -35,8 +36,10 @@ void main() async {
 
   try {
     // Initialize Firebase dengan timeout agar tidak hang
-    await Firebase.initializeApp().timeout(
-      const Duration(seconds: 10),
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(
+      const Duration(seconds: 60),
       onTimeout: () {
         print("Firebase init timeout, continuing anyway");
         throw "error";
@@ -48,10 +51,7 @@ void main() async {
 
   // Inisialisasi Workmanager (opsional, bisa di-comment jika error)
   try {
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false, // Set ke false untuk production
-    );
+    await Workmanager().initialize(callbackDispatcher);
 
     // Jadwalkan periodic sync (optional)
     await Workmanager().registerPeriodicTask(
@@ -84,10 +84,10 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
-        '/' : (context) => const Homewrapper(),
+        '/': (context) => const Homewrapper(),
         '/home': (context) => const HomeScreen(),
-        '/transaction' : (context) => const HistoryKeuangan(),
-        '/add-product' : (context) => const AddProductPage(),
+        '/transaction': (context) => const HistoryKeuangan(),
+        '/add-product': (context) => const AddProductPage(),
       },
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, primarySwatch: Colors.blue),
@@ -96,8 +96,16 @@ class MainApp extends StatelessWidget {
   }
 }
 
-//halaman home masih statis
+// halaman home masih statis
 // error di add pihak 
 
 // keuntungan bersih di home harusnya hpp - expense
+// menambah integrasi firestore (v)
+// menerapakan prediksi stok (kecerdasan komputational), prediksi penjualan (v)
+// analisis gudang(total aset, stok menipis (dan detailnya), produk terlaris) (v)
+
+//edit produk tambah variant
+//sku variant produk sama jika waktu berdekatan
+//produk terlaris tampilkan rata-rata terjual
+
 

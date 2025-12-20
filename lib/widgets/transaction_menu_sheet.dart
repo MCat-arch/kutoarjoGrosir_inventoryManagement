@@ -149,7 +149,7 @@ class TransactionMenuSheet extends StatelessWidget {
     Navigator.pop(context); // Tutup sheet
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (c) => GenericTransactionForm(type: type)),
+      MaterialPageRoute(builder: (c) => GenericTransactionForm(type: type, editData: null,)),
     );
   }
 

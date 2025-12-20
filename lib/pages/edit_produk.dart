@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Tambah import untuk image picker
 import 'package:kg/components/section_widget.dart';
-import 'package:kg/models/model_produk.dart';
-import 'package:kg/models/produk.dart';
+import 'package:kg/models/enums.dart';
+import 'package:kg/models/produk_model.dart';
+import 'package:kg/models/variant_model.dart';
+import 'package:kg/providers/party_provider.dart';
 import 'package:kg/services/inventory_service.dart';
+import 'package:provider/provider.dart';
 
 class EditProduk extends StatefulWidget {
   final ProductModel produk;
@@ -15,37 +21,39 @@ class EditProduk extends StatefulWidget {
 
 class _EditProdukState extends State<EditProduk> {
   final _formKey = GlobalKey<FormState>();
-  // final ProductService _productService = ProductService();\
   final InventoryService _invService = InventoryService();
+  final ImagePicker _picker = ImagePicker(); // Tambah untuk pick image
 
   late TextEditingController _nameCtrl;
   late TextEditingController _descCtrl;
-  late TextEditingController _supplierCtrl;
   late TextEditingController _categoryCtrl;
-  late TextEditingController _imgUrl;
 
   late List<ProductVariant> _tempVar;
+  String? selectedSupplierId; // Ubah nama jadi selectedSupplierId untuk jelas
   bool _isLoading = false;
+  File? selectedImg;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.produk.name);
     _descCtrl = TextEditingController(text: widget.produk.description);
-    _supplierCtrl = TextEditingController(text: widget.produk.description);
     _categoryCtrl = TextEditingController(text: widget.produk.categoryName);
-    _imgUrl = TextEditingController(text: widget.produk.mainImageUrl);
-
+    selectedSupplierId = widget.produk.supplierId; // Set dari produk
     _tempVar = List.from(widget.produk.variants);
+    // selectedImg mulai null, atau set dari mainImageUrl jika local path
+    if (widget.produk.mainImageUrl != null &&
+        widget.produk.mainImageUrl!.isNotEmpty) {
+      selectedImg = File(widget.produk.mainImageUrl!); // Asumsi path local
+    }
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
-    _supplierCtrl.dispose();
     _categoryCtrl.dispose();
-    _imgUrl.dispose();
+
     super.dispose();
   }
 
@@ -57,30 +65,29 @@ class _EditProdukState extends State<EditProduk> {
     });
 
     try {
-      ProductModel NewProduk = widget.produk.copyWith(
+      ProductModel newProduk = widget.produk.copyWith(
         name: _nameCtrl.text,
         description: _descCtrl.text,
-        mainImageUrl: _imgUrl.text,
+        mainImageUrl: selectedImg?.path, // Gunakan path dari selectedImg
         categoryName: _categoryCtrl.text,
-        supplierName: _supplierCtrl.text,
+        supplierId: selectedSupplierId, // Gunakan selectedSupplierId
         variants: _tempVar,
         lastUpdated: DateTime.now(),
       );
 
-      // await _productService.saveProduct(updatedProduct);
+      await _invService.updateProduct(newProduk); // Gunakan updateProduct
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Berhasil memperbarui produk!")),
         );
-        Navigator.pop(context); // Kembali ke layar sebelumnya
-        Navigator.pop(context); // Tutup BottomSheet Detail juga jika perlu
+        Navigator.pop(context, true); // Kembali dengan refresh
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Gagal Menyimpan"),
+            content: Text("Gagal Menyimpan: $e"),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -102,14 +109,14 @@ class _EditProdukState extends State<EditProduk> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            // onPressed: _isLoading ? null : _saveProduct,
-            onPressed: () {},
+            onPressed: _isLoading ? null : saveProduct,
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
+              key: _formKey, // Tambah key
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -123,12 +130,13 @@ class _EditProdukState extends State<EditProduk> {
                           child: buildTextField("Kategori", _categoryCtrl),
                         ),
                         SizedBox(width: 10),
-                        Expanded(
-                          child: buildTextField("Supplier", _supplierCtrl),
-                        ),
+                        Expanded(child: _buildSupplierDropdown()),
                       ],
                     ),
-                    buildTextField("URL Gambar", _imgUrl),
+                    SizedBox(height: 20),
+                    buildSectionTitle("Gambar Produk"),
+                    _buildImageSection(),
+                    // TODO: IMAGE SECTION
                     SizedBox(height: 20),
                     buildSectionTitle("Kelola Varian & Stok"),
                     Text(
@@ -235,6 +243,30 @@ class _EditProdukState extends State<EditProduk> {
     );
   }
 
+  Widget _buildSupplierDropdown() {
+    return Consumer<PartyProvider>(
+      builder: (context, partyProvider, _) {
+        final suppliers = partyProvider.parties
+            .where((p) => p.role == PartyRole.SUPPLIER)
+            .toList();
+
+        return DropdownButtonFormField<String>(
+          value: selectedSupplierId, // Gunakan value, bukan initialValue
+          decoration: const InputDecoration(labelText: 'Supplier'),
+          items: suppliers.map((s) {
+            return DropdownMenuItem(value: s.id, child: Text(s.name));
+          }).toList(),
+          onChanged: (val) {
+            setState(() {
+              selectedSupplierId = val;
+            });
+          },
+          validator: (value) => value == null ? 'Pilih Supplier' : null,
+        );
+      },
+    );
+  }
+
   // fungsi edit varian
   void _showEditVariantDialog(int index) {
     final variant = _tempVar[index];
@@ -300,5 +332,55 @@ class _EditProdukState extends State<EditProduk> {
         );
       },
     );
+  }
+
+  Widget _buildImageSection() {
+    return Column(
+      children: [
+        if (selectedImg != null)
+          Container(
+            height: 150,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(selectedImg!, fit: BoxFit.cover),
+            ),
+          )
+        else
+          Container(
+            height: 150,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(
+              child: Text(
+                "Tidak ada gambar",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ),
+        const SizedBox(height: 10),
+        ElevatedButton.icon(
+          onPressed: _pickImage,
+          icon: const Icon(Icons.image),
+          label: const Text("Pilih Gambar Baru"),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        selectedImg = File(pickedFile.path);
+      });
+    }
   }
 }

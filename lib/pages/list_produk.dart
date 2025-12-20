@@ -3,7 +3,7 @@ import 'package:kg/ui/party/add_party_page.dart';
 import 'package:kg/ui/inventory/add_product.dart';
 import 'package:kg/utils/colors.dart';
 import 'package:provider/provider.dart';
-import 'package:kg/models/model_produk.dart';
+import 'package:kg/models/produk_model.dart';
 import 'package:kg/models/enums.dart';
 import 'package:kg/widgets/card_produk.dart';
 import 'package:kg/providers/inventory_provider.dart';

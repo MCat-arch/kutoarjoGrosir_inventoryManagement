@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kg/models/keuangan_model.dart';
+import 'package:kg/models/transaction_model.dart';
 import 'package:kg/models/enums.dart'; // Import TrxType
 import 'package:kg/services/transaction_service.dart';
 
@@ -69,6 +69,27 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  // UPDATE TRANSACTION
+  Future<bool> updateTransaction(TransactionModel trx) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      // Logic Item: Jika di UI form update, items mungkin sudah diedit di Cart atau di object trx sendiri
+      // Pastikan object 'trx' yang dikirim sudah berisi list item terbaru
+
+      await _service.updateTransaction(trx);
+
+      await loadTransactions(); // Refresh UI
+      return true;
+    } catch (e) {
+      print("Error updating transaction: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Fungsi Checkout / Simpan Transaksi
   Future<bool> saveTransaction(TransactionModel trx) async {
     _isLoading = true;
@@ -109,5 +130,11 @@ class TransactionProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void setCart(List<TransactioItem> items) {
+    _cart.clear();
+    _cart.addAll(items);
+    notifyListeners();
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:kg/models/model_produk.dart';
-import 'package:kg/models/produk.dart';
+import 'package:kg/models/produk_model.dart';
+import 'package:kg/models/variant_model.dart';
 import 'package:kg/ui/party/add_party_page.dart';
 import 'package:kg/providers/inventory_provider.dart';
 import 'package:kg/providers/party_provider.dart';

@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/model_produk.dart';
-import 'package:kg/models/produk.dart';
+import 'package:kg/models/produk_model.dart';
+import 'package:kg/models/variant_model.dart';
 import 'package:kg/providers/inventory_provider.dart';
+import 'package:kg/providers/party_provider.dart';
 import 'package:kg/utils/colors.dart';
 import 'package:provider/provider.dart';
 
@@ -22,8 +23,10 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _descCtrl = TextEditingController();
   final TextEditingController _categoryCtrl = TextEditingController();
-  final TextEditingController _supplierCtrl = TextEditingController();
+  // final TextEditingController _supplierCtrl = TextEditingController();
   // final TextEditingController _imageCtrl = TextEditingController();
+
+  String? selectedSupplier;
 
   final List<ProductVariant> _variants = [];
 
@@ -42,7 +45,6 @@ class _AddProductPageState extends State<AddProductPage> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _categoryCtrl.dispose();
-    _supplierCtrl.dispose();
     super.dispose();
   }
 
@@ -178,9 +180,8 @@ class _AddProductPageState extends State<AddProductPage> {
       categoryName: _categoryCtrl.text.trim().isEmpty
           ? 'Umum'
           : _categoryCtrl.text.trim(),
-      supplierName: _supplierCtrl.text.trim().isEmpty
-          ? 'Unknown'
-          : _supplierCtrl.text.trim(),
+      supplierId: selectedSupplier ?? '',
+      supplierName: null,
       shopeeItemId: null,
       shopeeStatus: ShopeeItemStatus.NORMAL,
       variants: List<ProductVariant>.from(_variants),
@@ -254,14 +255,7 @@ class _AddProductPageState extends State<AddProductPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _supplierCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Supplier',
-                        ),
-                      ),
-                    ),
+                    Expanded(child: _buildSupplierDropdown()),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -388,6 +382,30 @@ class _AddProductPageState extends State<AddProductPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSupplierDropdown() {
+    return Consumer<PartyProvider>(
+      builder: (context, partyProvider, _) {
+        final suppliers = partyProvider.parties
+            .where((p) => p.role == PartyRole.SUPPLIER)
+            .toList();
+
+        return DropdownButtonFormField(
+          initialValue: selectedSupplier,
+          decoration: InputDecoration(labelText: 'Supplier'),
+          items: suppliers.map((s) {
+            return DropdownMenuItem(value: s.id, child: Text(s.name));
+          }).toList(),
+          onChanged: (val) {
+            setState(() {
+              selectedSupplier = val;
+            });
+          },
+          validator: (value) => value == null ? 'Pilih Supplier' : null,
+        );
+      },
     );
   }
 

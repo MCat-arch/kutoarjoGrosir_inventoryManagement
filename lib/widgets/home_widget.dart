@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:kg/services/sync_service.dart';
 
 class HomeWidget {
   static final NumberFormat _currency = NumberFormat.currency(
@@ -9,7 +10,7 @@ class HomeWidget {
     decimalDigits: 0,
   );
 
-  static AppBar buildAppBar() {
+  static AppBar buildAppBar(context) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -34,7 +35,17 @@ class HomeWidget {
           ),
         ],
       ),
-      actions: [],
+      actions: [
+        IconButton(
+          icon: Icon(Icons.sync),
+          onPressed: () async {
+            final syncService = SyncService();
+            await syncService.syncData();
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sync Completed")));
+          },
+          
+        ),
+      ],
     );
   }
 

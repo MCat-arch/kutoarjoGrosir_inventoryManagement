@@ -27,7 +27,9 @@ class PartyService {
     final db = await _db;
     return db.update(
       'parties',
-      party.toMap(),
+      {
+        'is_synced':0,
+        ...party.toMap()},
       where: 'id = ?',
       whereArgs: [party.id],
     );

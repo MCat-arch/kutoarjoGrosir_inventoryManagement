@@ -1,8 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/keuangan_model.dart';
-import 'package:kg/models/model_produk.dart';
+import 'package:kg/models/transaction_model.dart';
+import 'package:kg/models/produk_model.dart';
 import 'package:kg/widgets/home_widget.dart';
 
 class HomeService {

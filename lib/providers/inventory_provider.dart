@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kg/models/model_produk.dart';
+import 'package:kg/models/produk_model.dart';
 import 'package:kg/services/inventory_service.dart';
 
 

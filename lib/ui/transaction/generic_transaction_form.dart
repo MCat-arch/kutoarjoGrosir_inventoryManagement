@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kg/models/account_category_model.dart';
 import 'package:kg/models/enums.dart';
-import 'package:kg/models/keuangan_model.dart';
+import 'package:kg/models/transaction_model.dart';
 import 'package:kg/models/party_role.dart';
 import 'package:kg/providers/transaksi_provider.dart';
 import 'package:kg/widgets/account_picker.dart';
@@ -15,8 +15,13 @@ import 'package:provider/provider.dart';
 
 class GenericTransactionForm extends StatefulWidget {
   final trxType type;
+  final TransactionModel? editData;
 
-  const GenericTransactionForm({super.key, required this.type});
+  const GenericTransactionForm({
+    super.key,
+    required this.type,
+    required this.editData,
+  });
 
   @override
   State<GenericTransactionForm> createState() => _GenericTransactionFormState();
@@ -31,8 +36,13 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
   );
   final dateFormat = DateFormat('dd MMM yyyy');
 
+  bool _isPaidCheckbox = false; // Checkbox "Lunas/Bayar Penuh"
+
+  bool get _isEditMode => widget.editData != null;
+
   // Controllers
   final _totalCtrl = TextEditingController();
+  final _paidAmountCtrl = TextEditingController();
   final _descCtrl = TextEditingController(); // Catatan umum (bawah)
   final _itemDescCtrl =
       TextEditingController(); // Deskripsi khusus pengeluaran (atas total)
@@ -40,16 +50,55 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
   // State
   String _trxNumber = "AUTO-001";
   DateTime _selectedDate = DateTime.now();
-  String? _selectedPartyName; // Bisa nama Pihak atau Kategori Pengeluaran
-  // File? _selectedImage;
-  String? _selectedPartyId;
-  String? _selectedCategoryId;
+  // String? _selectedPartyName; // Bisa nama Pihak atau Kategori Pengeluaran
+  // // File? _selectedImage;
+  // String? _selectedPartyId;
+  // String? _selectedCategoryId;
   XFile? _selectedImg;
+  String? _selectedEntityId; 
+  String? _selectedEntityName;
 
   @override
   void initState() {
     super.initState();
-    _generateTrxNumber();
+    _initializeData();
+  }
+
+  void _initializeData() {
+    if (_isEditMode) {
+      final data = widget.editData!;
+      _trxNumber = data.trxNumber;
+      _selectedDate = data.time;
+      _selectedEntityId = data.partyId;
+      _selectedEntityName = data.partyName;
+      _descCtrl.text = data.description ?? "";
+
+      // Isi Checkbox & Controller Bayar
+      _paidAmountCtrl.text = data.paidAmount.toInt().toString();
+      _isPaidCheckbox = data.isLunas;
+
+      // Load Total Manual jika bukan barang
+      if (!_isItemTransaction) {
+        _totalCtrl.text = currency.format(data.totalAmount);
+      }
+
+      if (_isItemTransaction && data.items != null) {
+        Future.microtask(
+          () => context.read<TransactionProvider>().setCart(data.items!),
+        );
+      } else {
+        Future.microtask(() => context.read<TransactionProvider>().clearCart());
+      }
+    } else {
+      _generateTrxNumber();
+      // FIX: Reset Cart agar sisa transaksi sebelumnya hilang
+      Future.microtask(
+        () => Provider.of<TransactionProvider>(
+          context,
+          listen: false,
+        ).clearCart(),
+      );
+    }
   }
 
   void _generateTrxNumber() {
@@ -136,6 +185,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
   @override
   void dispose() {
     _totalCtrl.dispose();
+    _paidAmountCtrl.dispose();
     _descCtrl.dispose();
     _itemDescCtrl.dispose();
     super.dispose();
@@ -143,14 +193,35 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
   @override
   Widget build(BuildContext context) {
+    final trxProvider = context.watch<TransactionProvider>();
+    final cartItems = trxProvider.cart;
+
+    double totalBill = 0;
+    if (_isItemTransaction) {
+      totalBill = trxProvider.totalCartAmount;
+    } else {
+      // Parse manual dari controller jika Keuangan
+      totalBill =
+          double.tryParse(_totalCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
+          0;
+    }
+
+    double inputBayar =
+        double.tryParse(
+          _paidAmountCtrl.text.replaceAll(RegExp(r'[^0-9]'), ''),
+        ) ??
+        0;
+    double remaining = totalBill - inputBayar;
+
     return Scaffold(
       backgroundColor: Colors.grey[50], // Background abu sangat muda
       appBar: AppBar(
         title: Text(
-          _pageTitle,
+          _isEditMode ? "Ubah $_pageTitle" : "Tambah $_pageTitle",
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
         ),
         backgroundColor: Colors.white,
@@ -223,43 +294,65 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Consumer<TransactionProvider>(
-                      builder: (context, provider, child) {
-                        if (provider.cart.isEmpty) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Text(
-                                "Belum ada barang",
-                                style: TextStyle(color: Colors.grey[500]),
-                              ),
-                            ),
-                          );
-                        }
-                        return Column(
-                          children: provider.cart.map((item) {
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              child: ListTile(
-                                title: Text(item.name),
-                                subtitle: Text(
-                                  "${item.qty} x ${currency.format(item.price)}",
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.close, size: 20),
-                                  onPressed: () {
-                                    context
-                                        .read<TransactionProvider>()
-                                        .removeFromCart(item.variantId);
-                                  },
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                    // ... List Cart Items disini (ambil dari Provider) ...
+
+                    // 4. LIST ITEM (Cart)
+                    if (cartItems.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Item Tagihan (${cartItems.length})",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const Icon(
+                            Icons.remove,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      ...cartItems.map((item) => _buildCartItemCard(item)),
+                      const Divider(height: 30),
+                    ],
+
+                    // Consumer<TransactionProvider>(
+                    //   builder: (context, provider, child) {
+                    //     if (provider.cart.isEmpty) {
+                    //       return Center(
+                    //         child: Padding(
+                    //           padding: const EdgeInsets.all(20),
+                    //           child: Text(
+                    //             "Belum ada barang",
+                    //             style: TextStyle(color: Colors.grey[500]),
+                    //           ),
+                    //         ),
+                    //       );
+                    //     }
+                    //     return Column(
+                    //       children: provider.cart.map((item) {
+                    //         return Card(
+                    //           margin: const EdgeInsets.only(bottom: 8),
+                    //           child: ListTile(
+                    //             title: Text(item.name),
+                    //             subtitle: Text(
+                    //               "${item.qty} x ${currency.format(item.price)}",
+                    //             ),
+                    //             trailing: IconButton(
+                    //               icon: const Icon(Icons.close, size: 20),
+                    //               onPressed: () {
+                    //                 context
+                    //                     .read<TransactionProvider>()
+                    //                     .removeFromCart(item.variantId);
+                    //               },
+                    //             ),
+                    //           ),
+                    //         );
+                    //       }).toList(),
+                    //     );
+                    //   },
+                    // ),
                   ] else ...[
                     // --- MODE KEUANGAN (Biaya/Masuk) ---
                     SizedBox(
@@ -271,7 +364,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                           color: Color(0xFF27AE60),
                         ),
                         label: Text(
-                          _selectedCategoryId == null
+                          _selectedEntityId == null
                               ? "Tambah Item Pengeluaran"
                               : "Tambah Sumber",
                           style: const TextStyle(
@@ -279,6 +372,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: const BorderSide(color: Color(0xFF27AE60)),
@@ -286,6 +380,38 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
+                        ),
+                      ),
+                    ),
+                    Checkbox(
+                      value: _isPaidCheckbox,
+                      activeColor: const Color(0xFF27AE60),
+                      onChanged: (val) {
+                        setState(() {
+                          _isPaidCheckbox = val!;
+                          if (_isPaidCheckbox) {
+                            _paidAmountCtrl.text = totalBill.toInt().toString();
+                          } else {
+                            _paidAmountCtrl.text = "0";
+                          }
+                        });
+                      },
+                    ),
+                    const Text("Lunas / Jumlah Dibayar"),
+                    const Spacer(),
+                    SizedBox(
+                      width: 120,
+                      child: TextField(
+                        controller: _paidAmountCtrl,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.right,
+                        onChanged: (val) =>
+                            setState(() {}), // Refresh UI hitung sisa
+                        decoration: const InputDecoration(
+                          prefixText: "Rp ",
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                          border: UnderlineInputBorder(),
                         ),
                       ),
                     ),
@@ -340,6 +466,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                                 keyboardType: TextInputType.number,
                                 // ReadOnly jika ini transaksi barang (karena total dihitung otomatis)
                                 readOnly: _isItemTransaction,
+                                onChanged: (v) => setState(() {}),
                                 decoration: const InputDecoration(
                                   prefixText: "Rp ",
                                   border: InputBorder.none,
@@ -354,17 +481,42 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                           ],
                         ),
                         const Divider(),
-                        TextField(
-                          controller: _descCtrl,
-                          maxLines: 2,
-                          decoration: const InputDecoration(
-                            hintText: "Catatan atau Keterangan",
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+
+                        // TextField(
+                        //   controller: _descCtrl,
+                        //   maxLines: 2,
+                        //   decoration: const InputDecoration(
+                        //     hintText: "Catatan atau Keterangan",
+                        //     border: InputBorder.none,
+                        //     hintStyle: TextStyle(
+                        //       fontSize: 14,
+                        //       color: Colors.grey,
+                        //     ),
+                        //   ),
+                        // ),
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: _isPaidCheckbox,
+                              onChanged: (val) => setState(() {
+                                _isPaidCheckbox = val!;
+                                _paidAmountCtrl.text = _isPaidCheckbox
+                                    ? totalBill.toInt().toString()
+                                    : "0";
+                              }),
                             ),
-                          ),
+                            Text("Lunas"),
+                            Spacer(),
+                            SizedBox(
+                              width: 120,
+                              child: TextField(
+                                controller: _paidAmountCtrl,
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.right,
+                                onChanged: (v) => setState(() {}),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -420,7 +572,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isFormValid() ? _saveTransaction : null,
+                onPressed: () =>
+                    _isFormValid() ? _saveTransaction(trxProvider) : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors
                       .grey[200], // Default disable color (ubah ke Hijau jika valid)
@@ -433,8 +586,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
-                  "Simpan",
+                child: Text(
+                  _isEditMode ? "Perbarui" : "Simpan",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -492,8 +645,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                 ? Colors.blue[50]
                 : Colors.teal[50],
             child: Text(
-              _selectedPartyName != null
-                  ? _selectedPartyName![0].toUpperCase()
+              _selectedEntityName != null
+                  ? _selectedEntityName![0].toUpperCase()
                   : "?",
               style: TextStyle(
                 color: _isItemTransaction ? Colors.blue : Colors.teal,
@@ -508,13 +661,13 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _selectedPartyName ?? _selectorLabel,
+                  _selectedEntityName ?? _selectorLabel,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-                if (_selectedPartyName !=
+                if (_selectedEntityName !=
                     null) // Jika sudah pilih, tampilkan label kecil
                   Text(
                     _selectorLabel,
@@ -538,6 +691,83 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartItemCard(TransactioItem item) {
+    // Tampilan Item sesuai screenshot
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "${item.qty} UNIT x ${currency.format(item.price)}",
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    currency.format(item.price * item.qty),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  // Tombol Edit Kecil
+                  InkWell(
+                    onTap: () {
+                      // Logic edit qty (bisa pakai dialog sederhana)
+                    },
+                    child: const Icon(Icons.edit, size: 18, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 8),
+                  // Tombol Hapus Merah
+                  InkWell(
+                    onTap: () => context
+                        .read<TransactionProvider>()
+                        .removeFromCart(item.variantId),
+                    child: const Icon(
+                      Icons.delete,
+                      size: 18,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Subtotal", style: TextStyle(color: Colors.grey)),
+              Text(
+                currency.format(item.price * item.qty),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
         ],
       ),
@@ -601,8 +831,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
     if (result != null && mounted) {
       setState(() {
-        _selectedPartyId = result.id;
-        _selectedPartyName = result.name;
+        _selectedEntityId = result.id;
+        _selectedEntityName = result.name;
       });
     }
   }
@@ -621,8 +851,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
     if (result != null && mounted) {
       setState(() {
-        _selectedCategoryId = result.id;
-        _selectedPartyName = result.name;
+        _selectedEntityId = result.id;
+        _selectedEntityName = result.name;
       });
     }
   }
@@ -637,12 +867,12 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
   bool _isFormValid() {
     // Validasi dasar
-    if (_selectedPartyId == null && _selectedCategoryId == null) return false;
+    if (_selectedEntityId == null) return false;
     if (_currentTotal <= 0) return false;
     return true;
   }
 
-  Future<void> _saveTransaction() async {
+  Future<void> _saveTransaction(TransactionProvider provider) async {
     if (!_isFormValid()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Mohon lengkapi semua field")),
@@ -651,24 +881,32 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
     }
 
     try {
-      final txnProvider = context.read<TransactionProvider>();
+      double total = provider.totalCartAmount;
+      double paid = double.tryParse(_paidAmountCtrl.text) ?? 0;
 
-      TransactionModel transaction = TransactionModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+      // Construct Model
+      final trx = TransactionModel(
+        id: _isEditMode
+            ? widget.editData!.id
+            : DateTime.now().millisecondsSinceEpoch
+                  .toString(), // ID Baru atau ID Lama
         trxNumber: _trxNumber,
         time: _selectedDate,
         typeTransaksi: widget.type,
-        partyId: _selectedPartyId,
-        partyName: _selectedPartyName,
-        totalAmount: _currentTotal,
-        paidAmount:
-            _currentTotal, // Asumsi bayar langsung (sesuaikan jika ada kredit)
-        items: _isItemTransaction ? List.from(txnProvider.cart) : null,
+        partyId: _selectedEntityId,
+        partyName: _selectedEntityName,
+        totalAmount: total,
+        paidAmount: paid,
         description: _descCtrl.text,
-        proofImage: _selectedImg?.path,
+        items: provider.cart, // Ambil dari Cart Provider
       );
 
-      bool success = await txnProvider.saveTransaction(transaction);
+      bool success;
+      if (_isEditMode) {
+        success = await provider.updateTransaction(trx);
+      } else {
+        success = await provider.saveTransaction(trx);
+      }
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
