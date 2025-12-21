@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kg/models/enums.dart';
 import 'package:kg/models/transaction_model.dart';
+import 'package:kg/providers/transaksi_provider.dart';
 import 'package:kg/ui/transaction/generic_transaction_form.dart';
 import 'package:kg/widgets/produk_detail.dart';
+import 'package:provider/provider.dart';
 
 Widget HistoryTransactionCard(TransactionModel trx, context) {
   // Logic Tampilan berdasarkan Tipe
@@ -21,8 +23,15 @@ Widget HistoryTransactionCard(TransactionModel trx, context) {
       amountColor = Colors.green;
       isMoneyIn = true;
       break;
-    case trxType.INCOME_OTHER:
+    case trxType.UANG_MASUK:
       typeLabel = "Uang Masuk";
+      typeColor = Colors.green[700]!;
+      typeIcon = Icons.arrow_downward;
+      amountColor = Colors.green;
+      isMoneyIn = true;
+      break;
+    case trxType.INCOME_OTHER:
+      typeLabel = "Pemasukan Lain";
       typeColor = Colors.green[700]!;
       typeIcon = Icons.arrow_downward;
       amountColor = Colors.green;
@@ -34,11 +43,17 @@ Widget HistoryTransactionCard(TransactionModel trx, context) {
       typeIcon = Icons.shopping_bag;
       amountColor = Colors.black;
       break;
-    case trxType.EXPENSE:
+    case trxType.UANG_KELUAR:
       typeLabel = "Uang Keluar";
       typeColor = Colors.red[700]!;
       typeIcon = Icons.arrow_upward;
       amountColor = Colors.black; // Uang keluar biasanya hitam/merah
+      break;
+    case trxType.EXPENSE:
+      typeLabel = "Pengeluaran";
+      typeColor = Colors.red[700]!;
+      typeIcon = Icons.arrow_upward;
+      amountColor = Colors.black;
       break;
     default:
       typeLabel = "Transaksi";
@@ -64,13 +79,46 @@ Widget HistoryTransactionCard(TransactionModel trx, context) {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
+        onTap: () async {
+          // 1. Ambil Provider
+          final provider = Provider.of<TransactionProvider>(
+            context,
+            listen: false,
+          );
+
+          if (trx.id == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('ID transaksi tidak valid')),
+            );
+            return;
+          }
+
+          // 2. Load detail items dari database (Pastikan fungsi ini ada di Provider)
+
+          List<TransactioItem>? details = await provider.getTransactionItems(
+            trx.id,
+          );
+
+          // 3. Gabungkan detail ke object TransactionModel agar lengkap
+          TransactionModel fullTrx = TransactionModel(
+            id: trx.id,
+            trxNumber: trx.trxNumber,
+            time: trx.time ?? DateTime.now(),
+            typeTransaksi: trx.typeTransaksi ?? trxType.SALE,
+            partyId: trx.partyId,
+            partyName: trx.partyName,
+            totalAmount: trx.totalAmount ?? 0,
+            paidAmount: trx.paidAmount ?? 0,
+            description: trx.description ?? '',
+            proofImage: trx.proofImage ?? '',
+            items: details ?? null,
+          );
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (ctx) => GenericTransactionForm(
-                type: trx.typeTransaksi,
-                editData: trx, // Pass data untuk edit
+                type: fullTrx.typeTransaksi,
+                editData: fullTrx, // Pass data untuk edit
               ),
             ),
           );

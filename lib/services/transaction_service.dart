@@ -110,7 +110,11 @@ class TransactionService {
   }
 
   // Helper: Apply effects (insert items, update stok, financial, saldo)
-  Future<void> _applyTransactionEffects(Transaction txn, TransactionModel trx, {required bool isUpdate}) async {
+  Future<void> _applyTransactionEffects(
+    Transaction txn,
+    TransactionModel trx, {
+    required bool isUpdate,
+  }) async {
     await _insertTransactionItems(txn, trx);
     await _updateStockForItems(txn, trx, isUpdate: isUpdate);
     await _insertFinancialRecords(txn, trx);
@@ -118,7 +122,10 @@ class TransactionService {
   }
 
   // Helper: Insert transaction items
-  Future<void> _insertTransactionItems(Transaction txn, TransactionModel trx) async {
+  Future<void> _insertTransactionItems(
+    Transaction txn,
+    TransactionModel trx,
+  ) async {
     if (trx.items != null) {
       for (var item in trx.items!) {
         await txn.insert('transaction_items', item.toMapForDb(trx.id));
@@ -127,11 +134,19 @@ class TransactionService {
   }
 
   // Helper: Update stok berdasarkan items
-  Future<void> _updateStockForItems(Transaction txn, TransactionModel trx, {required bool isUpdate}) async {
+  Future<void> _updateStockForItems(
+    Transaction txn,
+    TransactionModel trx, {
+    required bool isUpdate,
+  }) async {
     if (trx.items != null) {
       for (var item in trx.items!) {
-        bool decreaseStock = trx.typeTransaksi == trxType.SALE || trx.typeTransaksi == trxType.PURCHASE_RETURN;
-        bool increaseStock = trx.typeTransaksi == trxType.PURCHASE || trx.typeTransaksi == trxType.SALE_RETURN;
+        bool decreaseStock =
+            trx.typeTransaksi == trxType.SALE ||
+            trx.typeTransaksi == trxType.PURCHASE_RETURN;
+        bool increaseStock =
+            trx.typeTransaksi == trxType.PURCHASE ||
+            trx.typeTransaksi == trxType.SALE_RETURN;
 
         if (decreaseStock || increaseStock) {
           List<Map> res = await txn.query(
@@ -144,20 +159,43 @@ class TransactionService {
           if (res.isNotEmpty) {
             int currentStock = res.first['stock'] as int;
             int newStock = currentStock;
+            int changeQty = 0;
 
             if (decreaseStock) {
-              if (currentStock < item.qty) throw Exception("Stok tidak cukup untuk ${item.name}");
+              if (currentStock < item.qty)
+                throw Exception("Stok tidak cukup untuk ${item.name}");
               newStock -= item.qty;
+              changeQty = -item.qty;
             } else if (increaseStock) {
               newStock += item.qty;
+              changeQty = item.qty;
             }
 
             await txn.update(
               'variants',
-              {'stock': newStock, 'is_synced': 0},  // Reset sync
+              {'stock': newStock, 'is_synced': 0}, // Reset sync
               where: 'id = ?',
               whereArgs: [item.variantId],
             );
+
+            //insert to history perubahan stock
+            await txn.insert('stock_history', {
+              'id':
+                  DateTime.now().millisecondsSinceEpoch.toString() +
+                  item.variantId,
+              'variant_id': item.variantId,
+              'product_name':
+                  item.name, // atau ambil dari DB jika ingin nama bersih
+              'variant_name': '', // Opsional jika nama item sudah gabungan
+              'previous_stock': currentStock,
+              'current_stock': newStock,
+              'change_amount': changeQty,
+              'type':
+                  'TRANSACTION_${trx.typeTransaksi.toString().split('.').last}', // TRANSACTION_SALE
+              'description': 'Transaksi #${trx.trxNumber}',
+              'created_at': DateTime.now().toIso8601String(),
+              'is_synced': 0,
+            });
           }
         }
       }
@@ -165,9 +203,16 @@ class TransactionService {
   }
 
   // Helper: Insert financial records
-  Future<void> _insertFinancialRecords(Transaction txn, TransactionModel trx) async {
+  Future<void> _insertFinancialRecords(
+    Transaction txn,
+    TransactionModel trx,
+  ) async {
     if (trx.paidAmount > 0) {
-      bool isIncome = trx.typeTransaksi == trxType.SALE || trx.typeTransaksi == trxType.INCOME_OTHER || trx.typeTransaksi == trxType.PURCHASE_RETURN || trx.typeTransaksi == trxType.UANG_MASUK;
+      bool isIncome =
+          trx.typeTransaksi == trxType.SALE ||
+          trx.typeTransaksi == trxType.INCOME_OTHER ||
+          trx.typeTransaksi == trxType.PURCHASE_RETURN ||
+          trx.typeTransaksi == trxType.UANG_MASUK;
 
       await txn.insert('financial_records', {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -175,18 +220,26 @@ class TransactionService {
         'type': isIncome ? 'INCOME' : 'EXPENSE',
         'category': trx.typeTransaksi.toString().split('.').last,
         'amount': trx.paidAmount,
-        'description': trx.description ?? "${isIncome ? 'Masuk' : 'Keluar'} # ${trx.trxNumber}",
+        'description':
+            trx.description ??
+            "${isIncome ? 'Masuk' : 'Keluar'} # ${trx.trxNumber}",
         'created_at': DateTime.now().toIso8601String(),
-        'is_synced': 0,  // Tambah ini jika tabel punya kolom
+        'is_synced': 0, // Tambah ini jika tabel punya kolom
       });
     }
   }
 
   // Helper: Update saldo party
-  Future<void> _updatePartyBalance(Transaction txn, TransactionModel trx, {required bool isUpdate}) async {
+  Future<void> _updatePartyBalance(
+    Transaction txn,
+    TransactionModel trx, {
+    required bool isUpdate,
+  }) async {
     if (trx.partyId != null) {
       double debtChange = trx.totalAmount - trx.paidAmount;
-      if (debtChange != 0 || trx.typeTransaksi == trxType.INCOME_OTHER || trx.typeTransaksi == trxType.EXPENSE) {
+      if (debtChange != 0 ||
+          trx.typeTransaksi == trxType.INCOME_OTHER ||
+          trx.typeTransaksi == trxType.EXPENSE) {
         List<Map> partyRes = await txn.query(
           'parties',
           columns: ['balance'],
@@ -214,7 +267,11 @@ class TransactionService {
 
           await txn.update(
             'parties',
-            {'balance': newBalance, 'last_transaction_date': DateTime.now().toIso8601String(), 'is_synced': 0},
+            {
+              'balance': newBalance,
+              'last_transaction_date': DateTime.now().toIso8601String(),
+              'is_synced': 0,
+            },
             where: 'id = ?',
             whereArgs: [trx.partyId],
           );
@@ -224,7 +281,11 @@ class TransactionService {
   }
 
   // Helper: Revert stok dan saldo dari trx lama
-  Future<void> _revertStockAndBalance(Transaction txn, Map oldTrx, List<Map> oldItems) async {
+  Future<void> _revertStockAndBalance(
+    Transaction txn,
+    Map oldTrx,
+    List<Map> oldItems,
+  ) async {
     trxType oldType = trxType.values.firstWhere(
       (e) => e.toString().split('.').last == oldTrx['type'],
     );
@@ -235,10 +296,13 @@ class TransactionService {
 
     // Revert stok untuk setiap item
     for (var item in oldItems) {
-      String variantId = item['variant_id'];  // Perbaiki dari 'variant_Id' ke 'variant_id'
+      String variantId =
+          item['variant_id']; // Perbaiki dari 'variant_Id' ke 'variant_id'
       int qty = item['qty'] as int;
-      bool wasDecrease = oldType == trxType.SALE || oldType == trxType.PURCHASE_RETURN;
-      bool wasIncrease = oldType == trxType.PURCHASE || oldType == trxType.SALE_RETURN;
+      bool wasDecrease =
+          oldType == trxType.SALE || oldType == trxType.PURCHASE_RETURN;
+      bool wasIncrease =
+          oldType == trxType.PURCHASE || oldType == trxType.SALE_RETURN;
 
       List<Map> varRes = await txn.query(
         'variants',
@@ -252,9 +316,9 @@ class TransactionService {
         int revertedStock = currentStock;
 
         if (wasDecrease) {
-          revertedStock += qty;  // Balik decrease -> increase
+          revertedStock += qty; // Balik decrease -> increase
         } else if (wasIncrease) {
-          revertedStock -= qty;  // Balik increase -> decrease
+          revertedStock -= qty; // Balik increase -> decrease
         }
 
         await txn.update(
@@ -280,17 +344,17 @@ class TransactionService {
         double revertedBalance = currentBalance;
 
         if (oldType == trxType.SALE) {
-          revertedBalance -= debtChange;  // Balik + -> -
+          revertedBalance -= debtChange; // Balik + -> -
         } else if (oldType == trxType.PURCHASE) {
-          revertedBalance += debtChange;  // Balik - -> +
+          revertedBalance += debtChange; // Balik - -> +
         } else if (oldType == trxType.INCOME_OTHER) {
-          revertedBalance += oldPaid;  // Balik - -> +
+          revertedBalance += oldPaid; // Balik - -> +
         } else if (oldType == trxType.EXPENSE) {
-          revertedBalance -= oldPaid;  // Balik + -> -
+          revertedBalance -= oldPaid; // Balik + -> -
         } else if (oldType == trxType.UANG_MASUK) {
-          revertedBalance -= oldPaid;  // Balik + -> -
+          revertedBalance -= oldPaid; // Balik + -> -
         } else if (oldType == trxType.UANG_KELUAR) {
-          revertedBalance += oldPaid;  // Balik - -> +
+          revertedBalance += oldPaid; // Balik - -> +
         }
 
         await txn.update(

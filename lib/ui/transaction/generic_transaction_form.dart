@@ -48,15 +48,15 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
       TextEditingController(); // Deskripsi khusus pengeluaran (atas total)
 
   // State
-  String _trxNumber = "AUTO-001";
+  String _trxNumber = "AUTO";
   DateTime _selectedDate = DateTime.now();
-  // String? _selectedPartyName; // Bisa nama Pihak atau Kategori Pengeluaran
-  // // File? _selectedImage;
-  // String? _selectedPartyId;
-  // String? _selectedCategoryId;
+  String? _selectedPartyName; // Bisa nama Pihak atau Kategori Pengeluaran
+  // File? _selectedImage;
+  String? _selectedPartyId;
+  String? _selectedCategoryId;
   XFile? _selectedImg;
-  String? _selectedEntityId; 
-  String? _selectedEntityName;
+  // String? _selectedEntityId;
+  // String? _selectedEntityName;
 
   @override
   void initState() {
@@ -69,8 +69,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
       final data = widget.editData!;
       _trxNumber = data.trxNumber;
       _selectedDate = data.time;
-      _selectedEntityId = data.partyId;
-      _selectedEntityName = data.partyName;
+      _selectedPartyId = data.partyId;
+      _selectedPartyName = data.partyName;
       _descCtrl.text = data.description ?? "";
 
       // Isi Checkbox & Controller Bayar
@@ -78,15 +78,16 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
       _isPaidCheckbox = data.isLunas;
 
       // Load Total Manual jika bukan barang
-      if (!_isItemTransaction) {
-        _totalCtrl.text = currency.format(data.totalAmount);
-      }
+      // if (!_isItemTransaction) {
+      //   _totalCtrl.text = currency.format(data.totalAmount);
+      // }
 
       if (_isItemTransaction && data.items != null) {
         Future.microtask(
           () => context.read<TransactionProvider>().setCart(data.items!),
         );
       } else {
+        _totalCtrl.text = data.totalAmount.toInt().toString();
         Future.microtask(() => context.read<TransactionProvider>().clearCart());
       }
     } else {
@@ -211,7 +212,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
           _paidAmountCtrl.text.replaceAll(RegExp(r'[^0-9]'), ''),
         ) ??
         0;
-    double remaining = totalBill - inputBayar;
+    // double remaining = totalBill - inputBayar;
 
     return Scaffold(
       backgroundColor: Colors.grey[50], // Background abu sangat muda
@@ -364,7 +365,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                           color: Color(0xFF27AE60),
                         ),
                         label: Text(
-                          _selectedEntityId == null
+                          _selectedCategoryId == null
                               ? "Tambah Item Pengeluaran"
                               : "Tambah Sumber",
                           style: const TextStyle(
@@ -383,38 +384,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                         ),
                       ),
                     ),
-                    Checkbox(
-                      value: _isPaidCheckbox,
-                      activeColor: const Color(0xFF27AE60),
-                      onChanged: (val) {
-                        setState(() {
-                          _isPaidCheckbox = val!;
-                          if (_isPaidCheckbox) {
-                            _paidAmountCtrl.text = totalBill.toInt().toString();
-                          } else {
-                            _paidAmountCtrl.text = "0";
-                          }
-                        });
-                      },
-                    ),
-                    const Text("Lunas / Jumlah Dibayar"),
-                    const Spacer(),
-                    SizedBox(
-                      width: 120,
-                      child: TextField(
-                        controller: _paidAmountCtrl,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.right,
-                        onChanged: (val) =>
-                            setState(() {}), // Refresh UI hitung sisa
-                        decoration: const InputDecoration(
-                          prefixText: "Rp ",
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 8),
-                          border: UnderlineInputBorder(),
-                        ),
-                      ),
-                    ),
+
                     const SizedBox(height: 16),
                     // Deskripsi Tambahan (Hanya di mode Keuangan sesuai request)
                     TextField(
@@ -480,20 +450,9 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                             ),
                           ],
                         ),
+
                         const Divider(),
 
-                        // TextField(
-                        //   controller: _descCtrl,
-                        //   maxLines: 2,
-                        //   decoration: const InputDecoration(
-                        //     hintText: "Catatan atau Keterangan",
-                        //     border: InputBorder.none,
-                        //     hintStyle: TextStyle(
-                        //       fontSize: 14,
-                        //       color: Colors.grey,
-                        //     ),
-                        //   ),
-                        // ),
                         Row(
                           children: [
                             Checkbox(
@@ -645,8 +604,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                 ? Colors.blue[50]
                 : Colors.teal[50],
             child: Text(
-              _selectedEntityName != null
-                  ? _selectedEntityName![0].toUpperCase()
+              _selectedPartyName != null
+                  ? _selectedPartyName![0].toUpperCase()
                   : "?",
               style: TextStyle(
                 color: _isItemTransaction ? Colors.blue : Colors.teal,
@@ -661,13 +620,13 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _selectedEntityName ?? _selectorLabel,
+                  _selectedPartyName ?? _selectorLabel,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-                if (_selectedEntityName !=
+                if (_selectedPartyName !=
                     null) // Jika sudah pilih, tampilkan label kecil
                   Text(
                     _selectorLabel,
@@ -815,7 +774,9 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
   }
 
   Future<void> _selectPartyOrCategory() async {
-    if (_isItemTransaction) {
+    if (_isItemTransaction ||
+        widget.type == trxType.UANG_MASUK ||
+        widget.type == trxType.UANG_KELUAR) {
       await _selectParty();
     } else {
       await _selectCategory();
@@ -831,8 +792,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
     if (result != null && mounted) {
       setState(() {
-        _selectedEntityId = result.id;
-        _selectedEntityName = result.name;
+        _selectedPartyId = result.id;
+        _selectedPartyName = result.name;
       });
     }
   }
@@ -851,8 +812,8 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
     if (result != null && mounted) {
       setState(() {
-        _selectedEntityId = result.id;
-        _selectedEntityName = result.name;
+        _selectedCategoryId = result.id;
+        _selectedPartyName = result.name;
       });
     }
   }
@@ -867,7 +828,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
   bool _isFormValid() {
     // Validasi dasar
-    if (_selectedEntityId == null) return false;
+    if (_selectedPartyId == null && _selectedCategoryId == null) return false;
     if (_currentTotal <= 0) return false;
     return true;
   }
@@ -881,7 +842,12 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
     }
 
     try {
-      double total = provider.totalCartAmount;
+      double total = _isItemTransaction
+          ? provider.totalCartAmount
+          : (double.tryParse(
+                  _totalCtrl.text.replaceAll(RegExp(r'[^0-9]'), ''),
+                ) ??
+                0);
       double paid = double.tryParse(_paidAmountCtrl.text) ?? 0;
 
       // Construct Model
@@ -893,12 +859,21 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
         trxNumber: _trxNumber,
         time: _selectedDate,
         typeTransaksi: widget.type,
-        partyId: _selectedEntityId,
-        partyName: _selectedEntityName,
+        partyId:
+            (_isItemTransaction ||
+                widget.type == trxType.UANG_MASUK ||
+                widget.type == trxType.UANG_KELUAR)
+            ? _selectedPartyId
+            : _selectedCategoryId,
+        partyName: _selectedPartyName,
         totalAmount: total,
         paidAmount: paid,
-        description: _descCtrl.text,
-        items: provider.cart, // Ambil dari Cart Provider
+        description: _descCtrl.text.isEmpty
+            ? _itemDescCtrl.text
+            : _descCtrl.text,
+        items: _isItemTransaction
+            ? provider.cart
+            : null, // Ambil dari Cart Provider
       );
 
       bool success;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:kg/providers/category_provider.dart';
-import 'package:kg/models/account_category_model.dart';
 import 'package:provider/provider.dart';
 
 class CategoryAccountPicker extends StatefulWidget {
@@ -94,6 +93,7 @@ class _CategoryAccountPickerState extends State<CategoryAccountPicker> {
                   );
                 }
                 return ListView.builder(
+                  itemCount: provider.categories.length,
                   itemBuilder: (context, index) {
                     final cat = provider.categories[index];
                     return ListTile(
@@ -103,6 +103,7 @@ class _CategoryAccountPickerState extends State<CategoryAccountPicker> {
                       onTap: () => Navigator.pop(context, cat),
                     );
                   },
+                  scrollDirection: Axis.vertical,
                 );
               },
             ),

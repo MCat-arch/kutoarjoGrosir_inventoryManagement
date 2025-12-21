@@ -96,16 +96,29 @@ class MainApp extends StatelessWidget {
   }
 }
 
-// halaman home masih statis
-// error di add pihak 
-
-// keuntungan bersih di home harusnya hpp - expense
+// halaman home masih statis (v)
+// error di add pihak (v)
 // menambah integrasi firestore (v)
 // menerapakan prediksi stok (kecerdasan komputational), prediksi penjualan (v)
 // analisis gudang(total aset, stok menipis (dan detailnya), produk terlaris) (v)
 
-//edit produk tambah variant
-//sku variant produk sama jika waktu berdekatan
-//produk terlaris tampilkan rata-rata terjual
+
+//PENTING
+// Widget transaksi error (uang masuk, uang keluar, expense, other income) (v)
+// detail transaksi tidak bisa edit data langsung karena tidak ada data (data produk hilang dan data party nya) (v)
+// di edit produk ada fitur tambah variant (tidak hanya edit) (v)
+
+//PERLU PENYESUAIAN
+// sku variant produk sama jika waktu berdekatan (menyebabkan error) ----(v)
+
+//PERLU PERBAIKAN
+// stok image error
+// stok history tidak ada dari penjualan ---(v)
 
 
+// THE PROBLEM
+// Image hilang setelah ganti page 
+
+// keuntungan bersih di home harusnya hpp - expense
+// state belum terganti di detail produk (setelah menambah produk)
+// produk terlaris tampilkan rata-rata terjual

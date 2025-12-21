@@ -93,38 +93,38 @@ class InventoryService {
   // ==============================================================================
   // 3. UPDATE PRODUCT
   // ==============================================================================
-  Future<void> updateProduct(ProductModel product) async {
-    final db = await _db;
+  // Future<void> updateProduct(ProductModel product) async {
+  //   final db = await _db;
 
-    await db.transaction((txn) async {
-      // A. Update Header
-      await txn.update(
-        'products',
-        {
-          'name': product.name,
-          'description': product.description,
-          'image_url': product.mainImageUrl,
-          'category': product.categoryName,
-          'supplier_id': product.supplierId,
-          'is_synced': 0,
-        },
-        where: 'id = ?',
-        whereArgs: [product.id],
-      );
+  //   await db.transaction((txn) async {
+  //     // A. Update Header
+  //     await txn.update(
+  //       'products',
+  //       {
+  //         'name': product.name,
+  //         'description': product.description,
+  //         'image_url': product.mainImageUrl,
+  //         'category': product.categoryName,
+  //         'supplier_id': product.supplierId,
+  //         'is_synced': 0,
+  //       },
+  //       where: 'id = ?',
+  //       whereArgs: [product.id],
+  //     );
 
-      // B. Update Variants (Strategi: Hapus Semua Lama -> Insert Baru)
-      // Ini strategi paling aman untuk sinkronisasi list child di SQL
-      await txn.delete(
-        'variants',
-        where: 'product_id = ?',
-        whereArgs: [product.id],
-      );
+  //     // B. Update Variants (Strategi: Hapus Semua Lama -> Insert Baru)
+  //     // Ini strategi paling aman untuk sinkronisasi list child di SQL
+  //     await txn.delete(
+  //       'variants',
+  //       where: 'product_id = ?',
+  //       whereArgs: [product.id],
+  //     );
 
-      for (var variant in product.variants) {
-        await txn.insert('variants', _mapVariantToDb(variant, product.id));
-      }
-    });
-  }
+  //     for (var variant in product.variants) {
+  //       await txn.insert('variants', _mapVariantToDb(variant, product.id));
+  //     }
+  //   });
+  // }
 
   // ==============================================================================
   // 4. DELETE PRODUCT

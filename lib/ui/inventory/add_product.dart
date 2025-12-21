@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,8 +24,6 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _descCtrl = TextEditingController();
   final TextEditingController _categoryCtrl = TextEditingController();
-  // final TextEditingController _supplierCtrl = TextEditingController();
-  // final TextEditingController _imageCtrl = TextEditingController();
 
   String? selectedSupplier;
 
@@ -33,6 +32,7 @@ class _AddProductPageState extends State<AddProductPage> {
   bool _isSaving = false;
   String _skuNumber = "";
   String? imgCtrl;
+  int countSku = 0;
 
   @override
   void initState() {
@@ -49,8 +49,9 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 
   void _generateSKU() {
+    String random = Random().nextInt(999).toString();
     _skuNumber =
-        "VR-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
+        "VR-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}-$random-$countSku";
   }
 
   Future<void> _showAddVariantDialog({
@@ -147,6 +148,7 @@ class _AddProductPageState extends State<AddProductPage> {
                 } else {
                   _variants.add(variant);
                 }
+                countSku++;
               });
 
               Navigator.pop(ctx);

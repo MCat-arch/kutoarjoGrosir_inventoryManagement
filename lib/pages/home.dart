@@ -45,8 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // --- DUMMY DATA SUMMARY (Nanti dari Firebase) ---
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

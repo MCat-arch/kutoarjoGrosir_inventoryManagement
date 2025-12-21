@@ -9,6 +9,7 @@ class TransactionProvider with ChangeNotifier {
   // State List History Transaksi
   List<TransactionModel> _transactions = [];
   List<TransactionModel> get transactions => _transactions;
+  List<TransactioItem> _items = [];
 
   // State KERANJANG BELANJA (Untuk POS)
   final List<TransactioItem> _cart = [];
@@ -68,6 +69,31 @@ class TransactionProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<List<TransactioItem>> getTransactionItems(String trxId) async {
+    try {
+      return await _service.getTransactionItems(trxId);
+    } catch (e) {
+      print("Error getting transaction items: $e");
+      throw e;
+    }
+  }
+
+  // Future<List<TransactioItem>> getTransactionItems(String index) async {
+  //   _isLoading = true;
+  //   notifyListeners();
+  //   try {
+  //     _transactions = await _service.getAllTransactions();
+  //     for (var trx in transactions) {
+  //       if (trx.id == index) {
+  //         _items = trx.items!;
+  //       }
+  //     }
+  //   } catch (e) {
+  //     throw (e);
+  //   }
+  //   return _items;
+  // }
 
   // UPDATE TRANSACTION
   Future<bool> updateTransaction(TransactionModel trx) async {

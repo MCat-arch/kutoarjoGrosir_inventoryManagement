@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:kg/models/produk_model.dart';
 import 'package:kg/services/inventory_service.dart';
 
-
 class InventoryProvider with ChangeNotifier {
   final InventoryService _service = InventoryService();
 
@@ -40,14 +39,17 @@ class InventoryProvider with ChangeNotifier {
     await loadProducts(); // Reload untuk memastikan data sinkron
   }
 
-  // 3. Update Produk
-  Future<void> updateProduct(ProductModel product) async {
-    await _service.updateProduct(product);
-    
+  // // 3. Update Produk
+  Future<void> updateProduct(
+    ProductModel productOld,
+    ProductModel productNew,
+  ) async {
+    await _service.updateProductWithHistory(productOld, productNew);
+
     // Optimistic Update (Update lokal dulu biar cepat)
-    int index = _products.indexWhere((p) => p.id == product.id);
+    int index = _products.indexWhere((p) => p.id == productOld.id);
     if (index != -1) {
-      _products[index] = product;
+      _products[index] = productNew;
       notifyListeners();
     } else {
       await loadProducts();
@@ -76,10 +78,13 @@ class InventoryProvider with ChangeNotifier {
   // Mengambil list produk yang sudah difilter Search & Kategori
   List<ProductModel> get filteredProducts {
     return _products.where((p) {
-      bool matchName = p.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      bool matchCategory = _filterCategory == null || 
-                           _filterCategory == "Semua" || 
-                           p.categoryName == _filterCategory;
+      bool matchName = p.name.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+      bool matchCategory =
+          _filterCategory == null ||
+          _filterCategory == "Semua" ||
+          p.categoryName == _filterCategory;
       return matchName && matchCategory;
     }).toList();
   }

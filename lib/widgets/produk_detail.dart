@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Wajib import ini
 import 'package:kg/models/produk_model.dart';
-import 'package:kg/pages/edit_produk.dart';
+import 'package:kg/ui/inventory/edit_produk.dart';
 import 'package:kg/ui/inventory/stock_history.dart';
 
 // Helper Format Rupiah
