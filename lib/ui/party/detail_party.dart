@@ -7,7 +7,7 @@ import 'package:kg/models/party_role.dart';
 import 'package:kg/providers/party_provider.dart';
 import 'package:kg/providers/transaksi_provider.dart';
 import 'package:kg/ui/transaction/generic_transaction_form.dart';
-import 'package:kg/ui/pihak/buildTransactionCard.dart';
+import 'package:kg/ui/transaction/buildTransactionCard.dart';
 import 'package:kg/utils/colors.dart';
 
 class DetailParty extends StatefulWidget {

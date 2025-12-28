@@ -22,6 +22,30 @@ class _HomewrapperState extends State<Homewrapper> {
     PartyPages(),
   ];
 
+  // Warna Tema Retro
+  final Color _bgCream = const Color(0xFFFFFEF7);
+  final Color _borderColor = Colors.black;
+
+  // Data Menu Navigasi
+  final List<Map<String, dynamic>> _navItems = [
+    {
+      'icon': Icons.storefront_outlined,
+      'activeIcon': Icons.storefront,
+      'label': 'Home',
+    },
+    {
+      'icon': Icons.inventory_2_outlined,
+      'activeIcon': Icons.inventory_2,
+      'label': 'Stok',
+    },
+    {
+      'icon': Icons.receipt_long_outlined,
+      'activeIcon': Icons.receipt_long,
+      'label': 'Transaksi',
+    },
+    {'icon': Icons.group_outlined, 'activeIcon': Icons.group, 'label': 'Pihak'},
+  ];
+
   void _onNavTap(int index) {
     setState(() {
       _selectedIndex = index;
@@ -31,33 +55,71 @@ class _HomewrapperState extends State<Homewrapper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: _bgCream,
       body: _pages[_selectedIndex],
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
   Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      backgroundColor: Colors.white,
-      currentIndex: _selectedIndex,
-      onTap: _onNavTap,
-      selectedItemColor: const Color(0xFF27AE60),
-      unselectedItemColor: Colors.grey[500],
-      type: BottomNavigationBarType.fixed,
-      elevation: 8,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: "Home"),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.inventory_2_rounded),
-          label: "Inventory",
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: _borderColor, width: 2)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(_navItems.length, (index) {
+              return _buildNavItem(index);
+            }),
+          ),
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.history), label: "Transaksi"),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_2_sharp),
-          label: "Pihak",
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index) {
+    bool isSelected = _selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () => _onNavTap(index),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOutQuad,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 20 : 12,
+          vertical: 10,
         ),
-      ],
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected
+                  ? _navItems[index]['activeIcon']
+                  : _navItems[index]['icon'],
+              color: isSelected ? Colors.white : Colors.grey[600],
+              size: 24,
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                _navItems[index]['label'],
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

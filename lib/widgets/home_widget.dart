@@ -1,7 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:kg/pages/laporan_keuangan.dart';
+import 'package:kg/pages/list_produk.dart';
+import 'package:kg/pages/party_pages.dart';
 import 'package:kg/services/sync_service.dart';
+import 'package:kg/widgets/produk_detail.dart';
 
 class HomeWidget {
   static final NumberFormat _currency = NumberFormat.currency(
@@ -10,28 +14,55 @@ class HomeWidget {
     decimalDigits: 0,
   );
 
+  // --- COLORS PALETTE ---
+  static const Color colorBg = Color(0xFFFFFEF7);
+  static const Color colorBorder = Colors.black;
+  static const Color colorShadow = Colors.black;
+
+  static const Color colorYellow = Color(0xFFF9D423); // Profit / Main
+  static const Color colorGreen = Color(0xFF69F0AE); // Income
+  static const Color colorRed = Color(0xFFFF8A80); // Expense
+  static const Color colorBlue = Color(0xFF80D8FF); // Actions
+
   static AppBar buildAppBar(context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: colorBg,
       elevation: 0,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            "Halo, Owner 👋",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 14,
-              fontWeight: FontWeight.normal,
+      centerTitle: false,
+      titleSpacing: 20,
+      shape: const Border(bottom: BorderSide(color: colorBorder, width: 2)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: colorYellow,
+              shape: BoxShape.circle,
+              border: Border.all(color: colorBorder, width: 2),
             ),
+            child: const Icon(Icons.storefront, color: Colors.black, size: 20),
           ),
-          Text(
-            "Toko KutoarjoGrosir",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                "Halo, Owner 👋",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                "Kutoarjo Grosir",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -41,111 +72,86 @@ class HomeWidget {
           onPressed: () async {
             final syncService = SyncService();
             await syncService.syncData();
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sync Completed")));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text("Sync Completed")));
           },
-          
         ),
       ],
     );
   }
 
+  // --- FINANCIAL CARD (BENTO GRID STYLE) ---
   static Widget buildFinancialCard({
     required double income,
     required double expense,
     required double profit,
   }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade800, Colors.green.shade500],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          const Text(
-            "Keuntungan Bersih Bulan Ini",
-            style: TextStyle(color: Colors.white70),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _currency.format(profit),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              _buildMiniStat(
-                Icons.arrow_downward,
-                "Pemasukan",
-                income,
-                Colors.white,
-              ),
-              Container(
-                width: 1,
-                height: 30,
-                color: Colors.white24,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-              ),
-              _buildMiniStat(
-                Icons.arrow_upward,
-                "Pengeluaran",
-                expense,
-                Colors.redAccent.shade100,
+    return Column(
+      children: [
+        // 1. BIG PROFIT CARD
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colorYellow, // Warna Mencolok
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colorBorder, width: 2),
+            boxShadow: const [
+              BoxShadow(
+                color: colorShadow,
+                offset: Offset(4, 4),
+                blurRadius: 0,
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  static Widget _buildMiniStat(
-    IconData icon,
-    String label,
-    double amount,
-    Color valueColor,
-  ) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white24,
-            borderRadius: BorderRadius.circular(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.monetization_on, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    "Total Keuntungan",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                currency.format(profit),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                  letterSpacing: -1,
+                ),
+              ),
+            ],
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
         ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+
+        const SizedBox(height: 16),
+
+        // 2. ROW INCOME & EXPENSE
+        Row(
           children: [
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 10),
+            Expanded(
+              child: _buildSmallStatCard(
+                title: "Pemasukan",
+                amount: income,
+                color: colorGreen,
+                icon: Icons.arrow_downward,
+              ),
             ),
-            Text(
-              _currency.format(amount),
-              style: TextStyle(
-                color: valueColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSmallStatCard(
+                title: "Pengeluaran",
+                amount: expense,
+                color: colorRed,
+                icon: Icons.arrow_upward,
               ),
             ),
           ],
@@ -154,100 +160,163 @@ class HomeWidget {
     );
   }
 
-  static Widget buildQuickActionsGrid(BuildContext context) {
-    final actions = [
-      {
-        'icon': Icons.add_shopping_cart,
-        'label': 'Penjualan',
-        'color': Colors.blue,
-        'route': '/transaction',
-      },
-      {
-        'icon': Icons.shopping_bag_outlined,
-        'label': 'Pembelian',
-        'color': Colors.orange,
-        'route': '/transaction',
-      },
-      {
-        'icon': Icons.attach_money,
-        'label': 'Biaya',
-        'color': Colors.red,
-        'route': '/transaction',
-      },
-      {
-        'icon': Icons.inventory_2_outlined,
-        'label': 'Tambah Stok',
-        'color': Colors.purple,
-        'route': '/add-product',
-      },
-    ];
-
-    return SizedBox(
-      height: 90,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final item = actions[index];
-          return GestureDetector(
-            onTap: () {
-              // Navigator.pushNamed(context, item['route']);
-              Navigator.pushNamed(context, "${item['route']}");
-            },
-            child: Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: (item['color'] as Color).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    item['icon'] as IconData,
-                    color: item['color'] as Color,
-                  ),
+  static Widget _buildSmallStatCard({
+    required String title,
+    required double amount,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorBorder, width: 2),
+        boxShadow: const [
+          BoxShadow(color: colorShadow, offset: Offset(4, 4), blurRadius: 0),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: Icon(icon, size: 14, color: Colors.black),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  item['label'] as String,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-          );
-        },
-        separatorBuilder: (c, i) => SizedBox(width: 16),
-        itemCount: actions.length,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            currency.format(amount).replaceAll("Rp ", ""), // Hapus Rp biar muat
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+        ],
       ),
     );
   }
 
+  // --- QUICK ACTIONS GRID ---
+  static Widget buildQuickActionsGrid(BuildContext context) {
+    // Helper utk tombol navigasi
+    Widget _btn(String label, IconData icon, Color bg, VoidCallback onTap) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colorBorder, width: 2),
+            boxShadow: const [
+              BoxShadow(
+                color: colorShadow,
+                offset: Offset(3, 3),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: bg,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colorBorder, width: 1.5),
+                ),
+                child: Icon(icon, color: Colors.black, size: 24),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 4,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 0.85,
+      children: [
+        _btn("Produk", Icons.inventory_2_outlined, colorBlue, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (c) => const InventoryScreen()),
+          );
+        }),
+        _btn("Pihak", Icons.people_outline, colorYellow, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (c) => const PartyPages()),
+          );
+        }),
+        _btn("Transaksi", Icons.receipt_long, colorGreen, () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (c) => const HistoryKeuangan()),
+          );
+        }),
+        _btn("Laporan", Icons.bar_chart_rounded, colorRed, () {
+          // TODO: Navigasi ke Laporan
+        }),
+      ],
+    );
+  }
+
+  // --- CHART SECTION ---
   static Widget buildChartSection({
-    required List<BarChartGroupData> chartData,
+    required List<FlSpot> chartData,
     required bool isDailyChart,
     required Function(bool) onToggle,
   }) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: colorBorder, width: 2),
+        boxShadow: const [
+          BoxShadow(color: colorShadow, offset: Offset(4, 4), blurRadius: 0),
+        ],
       ),
       child: Column(
         children: [
+          // Header Chart
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "Arus Kas",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                "Tren Arus Kas",
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+
+              // Toggle Switch Retro
               Container(
-                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  border: Border.all(color: colorBorder, width: 1.5),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -257,6 +326,7 @@ class HomeWidget {
                       isDailyChart,
                       () => onToggle(true),
                     ),
+                    Container(width: 1.5, height: 25, color: colorBorder),
                     _chartToggleBtn(
                       "Bulanan",
                       !isDailyChart,
@@ -267,54 +337,73 @@ class HomeWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
+
+          // Chart
           AspectRatio(
-            aspectRatio: 1.5,
-            child: BarChart(
-              BarChartData(
-                gridData: FlGridData(show: false),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        const days = ['Sn', 'Sl', 'Rb', 'Km', 'Jm', 'Sb', 'Mg'];
-                        if (isDailyChart && value.toInt() < days.length) {
-                          return Text(
-                            days[value.toInt()],
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 10,
-                            ),
-                          );
-                        }
-                        return const Text('');
-                      },
+            aspectRatio: 1.7,
+            child: chartData.isEmpty
+                ? Center(
+                    child: Text(
+                      "Belum ada data",
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
+                  )
+                : LineChart(
+                    LineChartData(
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: Colors.grey.withOpacity(0.2),
+                          strokeWidth: 1,
+                          dashArray: [5, 5], // Dotted line
+                        ),
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        bottomTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: chartData,
+                          isCurved: true,
+                          color: Colors.black, // Garis Grafik Hitam Tegas
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) {
+                              return FlDotCirclePainter(
+                                radius: 4,
+                                color: colorYellow, // Titik Kuning
+                                strokeWidth: 2,
+                                strokeColor: Colors.black, // Outline Hitam
+                              );
+                            },
+                          ),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: colorYellow.withOpacity(
+                              0.2,
+                            ), // Shading bawah kuning
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                borderData: FlBorderData(show: false),
-                barGroups: chartData,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _chartLegend(Colors.green, "Masuk"),
-              const SizedBox(width: 16),
-              _chartLegend(Colors.redAccent, "Keluar"),
-            ],
           ),
         ],
       ),
@@ -322,7 +411,7 @@ class HomeWidget {
   }
 
   static Widget _chartToggleBtn(
-    String label,
+    String text,
     bool isActive,
     VoidCallback onTap,
   ) {
@@ -331,115 +420,19 @@ class HomeWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                  ),
-                ]
-              : null,
+          color: isActive ? Colors.black : Colors.transparent,
+          borderRadius: isActive
+              ? BorderRadius.circular(18)
+              : BorderRadius.zero,
         ),
         child: Text(
-          label,
+          text,
           style: TextStyle(
             fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            color: isActive ? Colors.black : Colors.grey,
+            fontWeight: FontWeight.bold,
+            color: isActive ? Colors.white : Colors.black,
           ),
         ),
-      ),
-    );
-  }
-
-  static Widget _chartLegend(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
-    );
-  }
-
-  static Widget buildInventorySummary({
-    required double assetValue,
-    required int lowStockCount,
-  }) {
-    return Container(
-      height: 120,
-      margin: const EdgeInsets.only(top: 10),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          _inventoryCard(
-            "Total Aset",
-            _currency.format(assetValue),
-            Colors.blue[50]!,
-            Colors.blue,
-          ),
-          const SizedBox(width: 12),
-          _inventoryCard(
-            "Stok Menipis",
-            "$lowStockCount Item",
-            Colors.orange[50]!,
-            Colors.orange,
-          ),
-          const SizedBox(width: 12),
-          _inventoryCard(
-            "Produk Terlaris",
-            "Kemeja Flanel",
-            Colors.purple[50]!,
-            Colors.purple,
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Widget _inventoryCard(
-    String title,
-    String value,
-    Color bgColor,
-    Color accentColor,
-  ) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: accentColor.withOpacity(0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: accentColor,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-            maxLines: 2,
-          ),
-        ],
       ),
     );
   }

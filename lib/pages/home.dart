@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart'; // Wajib import untuk Grafik
 import 'package:intl/intl.dart';
-import 'package:kg/pages/analysis_page.dart';
-import 'package:kg/pages/list_produk.dart';
+import 'package:kg/pages/analysis_page.dart'; // Pastikan ada atau ganti dengan placeholder
 import 'package:kg/providers/inventory_provider.dart';
 import 'package:kg/providers/party_provider.dart';
 import 'package:kg/providers/transaksi_provider.dart';
 import 'package:kg/services/home_service.dart';
-import 'package:kg/widgets/home_widget.dart';
+import 'package:kg/widgets/home_widget.dart'; // Kita akan buat ini di bawah
 import 'package:provider/provider.dart';
-// import 'package:kg/models/product_model.dart'; // Jika ingin hitung stok real
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,16 +16,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final currency = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
-
   late HomeService _homeService;
 
   // State Filter Grafik
-  bool _isDailyChart = true; // true = Harian, false = Bulanan
+  bool _isDailyChart = true; 
+
+  // Warna Background Cream Retro
+  final Color _bgCream = const Color(0xFFFFFEF7);
 
   @override
   void initState() {
@@ -38,23 +32,21 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PartyProvider>(context, listen: false).loadParties();
       Provider.of<InventoryProvider>(context, listen: false).loadProducts();
-      Provider.of<TransactionProvider>(
-        context,
-        listen: false,
-      ).loadTransactions();
+      Provider.of<TransactionProvider>(context, listen: false).loadTransactions();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: _bgCream,
       appBar: HomeWidget.buildAppBar(context),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 1. FINANCIAL SUMMARY (BENTO STYLE)
             Consumer<TransactionProvider>(
               builder: (context, transactionProvider, _) {
                 final financial = _homeService.calculateFinancialSummary(
@@ -68,30 +60,38 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
 
-            SizedBox(height: 20),
-            // 2. MENU PINTASAN (GRID)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: const Text(
-                "Akses Cepat",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            const SizedBox(height: 24),
+
+            // 2. MENU PINTASAN
+            const Text(
+              "AKSES CEPAT",
+              style: TextStyle(
+                fontWeight: FontWeight.w900, 
+                fontSize: 14,
+                letterSpacing: 1,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             HomeWidget.buildQuickActionsGrid(context),
 
             const SizedBox(height: 24),
 
-            // 3. GRAFIK ANALISIS (CHART)
+            // 3. GRAFIK ANALISIS
+             const Text(
+              "ANALITIK KEUANGAN",
+              style: TextStyle(
+                fontWeight: FontWeight.w900, 
+                fontSize: 14,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 12),
             Consumer<TransactionProvider>(
               builder: (context, transactionProvider, _) {
                 final chartData = _isDailyChart
-                    ? _homeService.generateChartData(
-                        transactionProvider.transactions,
-                      )
-                    : _homeService.generateMonthlyChartData(
-                        transactionProvider.transactions,
-                      );
+                    ? _homeService.generateChartData(transactionProvider.transactions)
+                    : _homeService.generateMonthlyChartData(transactionProvider.transactions);
+                    
                 return HomeWidget.buildChartSection(
                   chartData: chartData,
                   isDailyChart: _isDailyChart,
@@ -106,8 +106,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 24),
 
-            // 4. RINGKASAN GUDANG (INVENTORY)
-            InventoryAnalysisPage(),
+            // 4. RINGKASAN GUDANG
+             const Text(
+              "STATUS GUDANG",
+              style: TextStyle(
+                fontWeight: FontWeight.w900, 
+                fontSize: 14,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Asumsi InventoryAnalysisPage sudah ada/diimport
+            const InventoryAnalysisPage(), 
           ],
         ),
       ),

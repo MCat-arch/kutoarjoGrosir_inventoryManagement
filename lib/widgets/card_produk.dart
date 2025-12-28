@@ -17,7 +17,7 @@ Widget buildProductCard(ProductModel product, BuildContext context) {
   return GestureDetector(
     onTap: () {
       // Pastikan fungsi showProductDetail sudah diimport dengan benar
-      // showProductDetail(product, context);
+      showProductDetail(product, context);
     },
     child: Container(
       decoration: BoxDecoration(

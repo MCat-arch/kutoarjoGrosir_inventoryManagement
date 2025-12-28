@@ -21,6 +21,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String? _selectedCategory; // Null = Semua Kategori
   String _sortBy = "name_asc";
 
+  // --- THEME COLORS (Retro Palette) ---
+  final Color _bgCream = const Color(0xFFFFFEF7);
+  final Color _borderColor = Colors.black;
+  final Color _shadowColor = Colors.black;
+
   @override
   void initState() {
     super.initState();
@@ -63,11 +68,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: _bgCream,
       appBar: AppBar(
-        backgroundColor: backgroundAppBar,
+        backgroundColor: _bgCream,
         elevation: 0,
+        shape: Border(bottom: BorderSide(color: _borderColor, width: 2)),
         iconTheme: const IconThemeData(color: Colors.black),
+        centerTitle: true,
+        title: Text(
+          "Stok Barang",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w900, // Extra Bold
+            fontSize: 20,
+            letterSpacing: -0.5,
+          ),
+        ),
       ),
       body: Consumer<InventoryProvider>(
         builder: (context, provider, child) {
@@ -86,38 +102,73 @@ class _InventoryScreenState extends State<InventoryScreen> {
             children: [
               // SEARCH & FILTER
               Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(16),
+                color: _bgCream,
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    TextField(
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      decoration: InputDecoration(
-                        hintText: "Cari nama produk...",
-                        prefixIcon: const Icon(Icons.search),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _shadowColor,
+                            offset: Offset(3, 3),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        decoration: InputDecoration(
+                          hintText: "Cari nama produk...",
+                          hintStyle: TextStyle(color: Colors.grey[500]),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.black,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: _retroBorder(),
+                          enabledBorder: _retroBorder(),
+                          focusedBorder: _retroBorder(width: 1),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
                           child: Container(
+                            height: 48,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.white,
+                              border: Border.all(color: _borderColor, width: 2),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _shadowColor,
+                                  offset: Offset(3, 3),
+                                  blurRadius: 2,
+                                ),
+                              ],
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _selectedCategory ?? "Semua",
                                 isExpanded: true,
+                                icon: Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: Colors.black,
+                                ),
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
                                 items: categories.map((cat) {
                                   return DropdownMenuItem(
                                     value: cat,
@@ -138,35 +189,61 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        PopupMenuButton<String>(
-                          icon: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(Icons.sort, color: Colors.blue[800]),
+                        const SizedBox(width: 12),
+                        Container(
+                          height: 48,
+                          width: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: _borderColor, width: 2),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _shadowColor,
+                                offset: const Offset(3, 3),
+                                blurRadius: 0,
+                              ),
+                            ],
                           ),
-                          onSelected: (val) => setState(() => _sortBy = val),
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: "name_asc",
-                              child: Text("Abjad (A-Z)"),
+                          child: PopupMenuButton<String>(
+                            icon: Icon(Icons.sort, color: Colors.black),
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(color: _borderColor, width: 2),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            PopupMenuItem(
-                              value: "price_high",
-                              child: Text("Harga Tertinggi"),
-                            ),
-                            PopupMenuItem(
-                              value: "price_low",
-                              child: Text("Harga Terendah"),
-                            ),
-                            PopupMenuItem(
-                              value: "stock_low",
-                              child: Text("Stok Paling Sedikit"),
-                            ),
-                          ],
+                            onSelected: (val) => setState(() => _sortBy = val),
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(
+                                value: "name_asc",
+                                child: Text(
+                                  "Abjad (A-Z)",
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: "price_high",
+                                child: Text(
+                                  "Harga Tertinggi",
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: "price_low",
+                                child: Text(
+                                  "Harga Terendah",
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: "stock_low",
+                                child: Text(
+                                  "Stok Paling Sedikit",
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -177,15 +254,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
               // GRID PRODUK / EMPTY STATE
               Expanded(
                 child: provider.isLoading && filtered.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.black),
+                      )
                     : filtered.isEmpty
-                    ? const Center(child: Text("Produk tidak ditemukan"))
+                    ? _buildEmptyState()
                     : GridView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 80),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
-                              childAspectRatio: 0.68,
+                              childAspectRatio: 0.70,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 16,
                             ),
@@ -200,17 +279,81 @@ class _InventoryScreenState extends State<InventoryScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddProductPage()),
-          );
-        },
+      floatingActionButton: Container(
+        height: 56,
+        margin: EdgeInsets.only(bottom: 10),
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 8,
+          highlightElevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.black, width: 2),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddProductPage()),
+            );
+          },
+          icon: const Icon(Icons.add_box_outlined, size: 24),
+          label: const Text(
+            "Tambah Produk",
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+          ),
+        ),
       ),
     );
   }
+
+  // Helper Custom Border
+  OutlineInputBorder _retroBorder({double width = 2.0}) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: _borderColor, width: width),
+    );
+  }
+
+  // Helper Empty State
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: _borderColor, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: _shadowColor,
+                  offset: Offset(3, 3),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.inventory_2_outlined,
+              size: 40,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Produk tidak ditemukan",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  } // Helper Empty State
 }
 
 // import 'package:flutter/material.dart';

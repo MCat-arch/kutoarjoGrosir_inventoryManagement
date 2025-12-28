@@ -10,7 +10,9 @@ import 'package:kg/providers/transaksi_provider.dart';
 import 'package:kg/widgets/account_picker.dart';
 import 'package:kg/widgets/party_picker.dart';
 import 'package:kg/widgets/product_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:path/path.dart' as path;
 // Import model Pihak dan Provider Cart Anda
 
 class GenericTransactionForm extends StatefulWidget {
@@ -54,7 +56,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
   // File? _selectedImage;
   String? _selectedPartyId;
   String? _selectedCategoryId;
-  XFile? _selectedImg;
+  File? _selectedImg;
   // String? _selectedEntityId;
   // String? _selectedEntityName;
 
@@ -748,7 +750,17 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) setState(() => _selectedImg = image);
+    if (image != null) {
+      final Directory appDir = await getApplicationDocumentsDirectory();
+      String fileName = path.basename(image.path);
+
+      final String savedPath = path.join(appDir.path, fileName);
+
+      final File localImage = await File(image.path).copy(savedPath);
+      setState(() {
+        _selectedImg = localImage;
+      });
+    }
   }
 
   Future<void> _addProductToCart() async {

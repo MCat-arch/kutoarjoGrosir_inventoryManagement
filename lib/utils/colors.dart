@@ -5,3 +5,4 @@ const backgroundAppBar = Color.fromARGB(202, 220, 232, 232);
 const listTileText = Color.fromARGB(193, 255, 227, 227);
 const floatingColor = Color.fromARGB(184, 0, 59, 253);
 const container = Color.fromARGB(172, 240, 240, 240);
+final Color primaryColor = const Color(0xFF27AE60); // Hijau Konsisten
