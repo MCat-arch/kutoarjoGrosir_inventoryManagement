@@ -58,12 +58,12 @@ UI/UX aplikasi ini dibangun dengan filosofi desain yang kuat:
 
 | **Dashboard** | **Smart Analysis** |
 |:---:|:---:|
-| <img src="assets/screenshots/home.png" width="250" /> | <img src="assets/screenshots/analysis.png" width="250" /> |
+| <img src="assets/screenshoots/home.png" width="250" /> | <img src="assets/screenshoots/analysis.png" width="250" /> |
 | *Ringkasan keuangan & menu cepat* | *Rekomendasi belanja cerdas* |
 
 | **List Produk** | **Input Transaksi** |
 |:---:|:---:|
-| <img src="assets/screenshots/inventory.png" width="250" /> | <img src="assets/screenshots/transaction.png" width="250" /> |
+| <img src="assets/screenshoots/pihak.png" width="250" /> | <img src="assets/screenshots/transaction.png" width="250" /> |
 | *Manajemen stok gaya retro* | *Form input yang bersih & tegas* |
 
 ## 🛠️ Tech Stack
