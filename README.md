@@ -92,41 +92,36 @@ lib/
 │   └── transaction/ # Layar Riwayat & Form Transaksi
 ├── utils/           # Konstanta Warna, Helper Format
 └── widgets/         # Reusable Widgets (Retro Card, Buttons, Navbar)
+```
 🏁 Cara Menjalankan
 Ikuti langkah ini untuk menjalankan aplikasi di komputer Anda:
 
 Clone Repository
 
-Bash
+```bash
 
-git clone [https://github.com/username-anda/kutoarjo-grosir.git](https://github.com/username-anda/kutoarjo-grosir.git)
+git clone [https://github.com/MCat-arch/kutoarjoGrosir_inventoryManagement](https://github.com/MCat-arch/kutoarjoGrosir_inventoryManagement)
 cd kutoarjo-grosir
+
+```
 Install Dependencies Pastikan Flutter SDK sudah terinstall.
 
-Bash
+```bash
 
 flutter pub get
+
 Run App Jalankan di Emulator atau Device fisik.
 
-Bash
-
-flutter run
+```
+flutter run 
+bash ```
 🤝 Kontribusi
 Kontribusi selalu terbuka! Jika Anda ingin menambahkan fitur atau memperbaiki bug:
-
-Fork repository ini.
-
-Buat branch fitur baru (git checkout -b fitur-keren).
-
-Commit perubahan Anda (git commit -m 'Menambahkan fitur keren').
-
-Push ke branch (git push origin fitur-keren).
-
-Buat Pull Request.
 
 Note: Mohon pertahankan gaya desain Neo-Brutalism (Border tebal, warna solid) pada setiap komponen UI baru.
 
 <div align="center">
+```
 
 Dibuat dengan ❤️ dan ☕ untuk UMKM Indonesia.
 
