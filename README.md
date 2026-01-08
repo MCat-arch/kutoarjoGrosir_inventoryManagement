@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Project Logo](assets/images/logo.png)
+![Project Logo](assets/images/ic_launcher.png)
 **Manajemen Bisnis UMKM dengan Gaya.** *Aplikasi Point of Sales (POS) dan Manajemen Stok dengan desain Neo-Brutalism.*
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.0%2B-02569B?logo=flutter)](https://flutter.dev/)
@@ -63,7 +63,7 @@ UI/UX aplikasi ini dibangun dengan filosofi desain yang kuat:
 
 | **List Produk** | **Input Transaksi** |
 |:---:|:---:|
-| <img src="assets/screenshoots/pihak.png" width="250" /> | <img src="assets/screenshots/transaction.png" width="250" /> |
+| <img src="assets/screenshoots/inventory.png" width="250" /> | <img src="assets/screenshoots/transaction.png" width="250" /> |
 | *Manajemen stok gaya retro* | *Form input yang bersih & tegas* |
 
 ## 🛠️ Tech Stack
