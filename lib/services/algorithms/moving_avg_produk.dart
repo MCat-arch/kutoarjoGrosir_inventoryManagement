@@ -10,7 +10,6 @@ class ForecastEngineMVA {
     int count = 0;
     int sum = 0;
 
-    // TODO: mengurutkan list dari terlama
 
     for (int i = salesData.length - 1; i >= 0; i--) {
       sum += salesData[i];
@@ -27,7 +26,6 @@ class ForecastEngineMVA {
     required int currentStock,
     required String priority,
   }) {
-    // Logic Bisnis: TODO: SESUIAKAN DENGAN SIKLUS RESTOCK
     // A (Winning) -> Stok harus cukup untuk 14 hari
     // B (Standard) -> Stok harus cukup untuk 7 hari
     // C (Dead) -> Tidak usah restock

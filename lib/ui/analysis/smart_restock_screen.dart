@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kg/services/database_helper.dart';
+import 'package:kg/utils/database_helper.dart';
 import 'package:kg/services/smart_analysis_service.dart';
 
 class SmartRestockScreen extends StatefulWidget {

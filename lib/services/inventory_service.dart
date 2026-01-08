@@ -2,7 +2,7 @@ import 'package:kg/models/produk_model.dart';
 import 'package:kg/models/variant_model.dart';
 import 'package:kg/models/stock_history.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:kg/services/database_helper.dart';
+import 'package:kg/utils/database_helper.dart';
 import 'package:kg/models/enums.dart'; // Import StatusProduk, ShopeeItemStatus
 
 class InventoryService {

@@ -1,5 +1,7 @@
+import 'package:kg/models/enums.dart';
 import 'package:kg/models/party_role.dart';
-import 'package:kg/services/database_helper.dart';
+import 'package:kg/models/transaction_model.dart';
+import 'package:kg/utils/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
 class PartyService {
@@ -27,9 +29,7 @@ class PartyService {
     final db = await _db;
     return db.update(
       'parties',
-      {
-        'is_synced':0,
-        ...party.toMap()},
+      {'is_synced': 0, ...party.toMap()},
       where: 'id = ?',
       whereArgs: [party.id],
     );
@@ -65,6 +65,48 @@ class PartyService {
         {'balance': newBalance},
         where: 'id = ?',
         whereArgs: [id],
+      );
+    }
+  }
+
+  // Recalculate balances from all transactions
+  Future<void> recalculateAllBalances() async {
+    final db = await _db;
+
+    final parties = await getAllParties();
+
+    for (var party in parties) {
+      final trxResult = await db.query(
+        'transactions',
+        where: 'party_id = ?',
+        whereArgs: [party.id],
+      );
+
+      double balance = 0;
+
+      for (var trxMap in trxResult) {
+        TransactionModel trx = TransactionModel.fromMap(trxMap);
+        double debtChange = trx.totalAmount - trx.paidAmount;
+        if (trx.typeTransaksi == trxType.SALE) {
+          balance += debtChange;
+        } else if (trx.typeTransaksi == trxType.PURCHASE) {
+          balance -= debtChange;
+        } else if (trx.typeTransaksi == trxType.INCOME_OTHER) {
+          balance -= trx.paidAmount;
+        } else if (trx.typeTransaksi == trxType.EXPENSE) {
+          balance += trx.paidAmount;
+        } else if (trx.typeTransaksi == trxType.UANG_MASUK) {
+          balance += trx.paidAmount;
+        } else if (trx.typeTransaksi == trxType.UANG_KELUAR) {
+          balance -= trx.paidAmount;
+        }
+      }
+
+      await db.update(
+        'parties',
+        {'balance': balance},
+        where: 'id = ?',
+        whereArgs: [party.id],
       );
     }
   }

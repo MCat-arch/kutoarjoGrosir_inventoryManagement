@@ -4,6 +4,8 @@ import 'package:kg/firebase_options.dart';
 import 'package:kg/pages/home.dart';
 import 'package:kg/pages/homeWrapper.dart';
 import 'package:kg/pages/laporan_keuangan.dart';
+import 'package:kg/pages/login.dart';
+import 'package:kg/providers/auth_provider.dart';
 import 'package:kg/providers/category_provider.dart';
 import 'package:kg/providers/inventory_provider.dart';
 import 'package:kg/providers/party_provider.dart';
@@ -45,6 +47,9 @@ void main() async {
         throw "error";
       },
     );
+
+    // Seed default user
+    // await AuthService().seedDefaultUser();
   } catch (e) {
     print("Firebase init error: $e, continuing...");
   }
@@ -57,7 +62,7 @@ void main() async {
     await Workmanager().registerPeriodicTask(
       "unique_sync_task",
       taskName,
-      frequency: const Duration(minutes: 15),
+      frequency: const Duration(hours: 24),
       constraints: Constraints(networkType: NetworkType.connected),
     );
   } catch (e) {
@@ -71,6 +76,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => PartyProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: const MainApp(),
     ),
@@ -84,7 +90,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
-        '/': (context) => const Homewrapper(),
+        '/': (context) => const AuthWrapper(),
         '/home': (context) => const HomeScreen(),
         '/transaction': (context) => const HistoryKeuangan(),
         '/add-product': (context) => const AddProductPage(),
@@ -93,6 +99,21 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(useMaterial3: true, primarySwatch: Colors.blue),
       initialRoute: '/',
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    if (authProvider.user != null) {
+      return const Homewrapper();
+    } else {
+      return const LoginPage();
+    }
   }
 }
 
@@ -122,3 +143,13 @@ class MainApp extends StatelessWidget {
 // keuntungan bersih di home harusnya hpp - expense
 // state belum terganti di detail produk (setelah menambah produk)
 // produk terlaris tampilkan rata-rata terjual
+
+
+//### V2
+// tampilan widget add transaksi. edit transaksi --v
+// tombol simpan transaksi belum hijau --v
+// detail pihak (otomatis menambahkan transaksi berdasarkan data pihak)
+// edit total, edit uang yang dibayar, data pembayaran masuk ke account pihak
+// saldo pihak belum sinkron dengan transaksi
+// di analisis gudang produk terlaris penjualan masih 0
+// sync ke firestore, dan login (opsional / sudah disediakan email dan password) --v

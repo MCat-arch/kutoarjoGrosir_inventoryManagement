@@ -18,6 +18,8 @@ dependencies:
   connectivity_plus: ^7.0.0
   cloud_firestore: ^6.1.0
   firebase_core: ^4.3.0
+  firebase_auth: ^6.1.2
+  shared_preferences: ^2.2.3
   workmanager: ^0.9.0
   printing: ^5.14.2
   pdf: ^3.11.3
@@ -29,3 +31,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/ic_launcher.png

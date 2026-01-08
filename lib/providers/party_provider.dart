@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kg/models/party_role.dart';
-import 'package:kg/services/database_helper.dart';
+import 'package:kg/utils/database_helper.dart';
 import 'package:kg/services/party_service.dart';
 
 class PartyProvider with ChangeNotifier {
@@ -21,6 +21,9 @@ class PartyProvider with ChangeNotifier {
     notifyListeners(); // Beritahu UI sedang loading
 
     try {
+      _parties = await service.getAllParties();
+      await service.recalculateAllBalances();
+      // Reload after recalculation
       _parties = await service.getAllParties();
     } catch (e) {
       print("Error loading parties: $e");

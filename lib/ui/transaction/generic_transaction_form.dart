@@ -18,11 +18,13 @@ import 'package:path/path.dart' as path;
 class GenericTransactionForm extends StatefulWidget {
   final trxType type;
   final TransactionModel? editData;
+  final PartyModel? preSelectedParty;
 
   const GenericTransactionForm({
     super.key,
     required this.type,
     required this.editData,
+    this.preSelectedParty,
   });
 
   @override
@@ -194,41 +196,52 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
     super.dispose();
   }
 
+  // --- BUILD METHOD ---
   @override
   Widget build(BuildContext context) {
     final trxProvider = context.watch<TransactionProvider>();
     final cartItems = trxProvider.cart;
 
+    // --- THEME COLORS (Local Definition) ---
+    const Color bgCream = Color(0xFFFFFEF7);
+    const Color borderColor = Colors.black;
+    const Color shadowColor = Colors.black;
+
     double totalBill = 0;
     if (_isItemTransaction) {
       totalBill = trxProvider.totalCartAmount;
     } else {
-      // Parse manual dari controller jika Keuangan
       totalBill =
           double.tryParse(_totalCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
           0;
     }
 
+    // ignore: unused_local_variable
     double inputBayar =
         double.tryParse(
           _paidAmountCtrl.text.replaceAll(RegExp(r'[^0-9]'), ''),
         ) ??
         0;
-    // double remaining = totalBill - inputBayar;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Background abu sangat muda
+      backgroundColor: bgCream,
       appBar: AppBar(
         title: Text(
-          _isEditMode ? "Ubah $_pageTitle" : "Tambah $_pageTitle",
+          _isEditMode
+              ? "UBAH $_pageTitle".toUpperCase()
+              : "TAMBAH $_pageTitle".toUpperCase(),
           style: const TextStyle(
             color: Colors.black,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w900, // Extra Bold
             fontSize: 18,
+            letterSpacing: 1,
           ),
         ),
-        backgroundColor: Colors.white,
+        centerTitle: true,
+        backgroundColor: bgCream,
         elevation: 0,
+        // Garis Bawah AppBar Retro
+        shape: const Border(bottom: BorderSide(color: borderColor, width: 2)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -238,7 +251,7 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -246,162 +259,156 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildHeaderField("Nomor Faktur", _trxNumber),
+                        child: _buildHeaderField("NO. FAKTUR", _trxNumber),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: GestureDetector(
                           onTap: _pickDate,
                           child: _buildHeaderField(
-                            "Tanggal",
+                            "TANGGAL",
                             dateFormat.format(_selectedDate),
-                            icon: Icons.calendar_today,
+                            icon: Icons.calendar_today_outlined,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
                   // 2. CARD SELECTOR (Pihak / Kategori)
                   _buildSelectorCard(),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // 3. KONTEN TENGAH (BEDA ANTARA JUAL/BELI vs BIAYA)
+                  // 3. KONTEN TENGAH
                   if (_isItemTransaction) ...[
-                    // --- MODE BARANG (Jual/Beli) ---
+                    // --- MODE BARANG ---
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: _addProductToCart,
-                        icon: const Icon(
-                          Icons.add_circle,
-                          color: Color(0xFF27AE60),
-                        ),
+                        icon: const Icon(Icons.add, color: Colors.black),
                         label: const Text(
-                          "Tambah Barang",
+                          "TAMBAH BARANG",
                           style: TextStyle(
-                            color: Color(0xFF27AE60),
-                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: Color(0xFF27AE60)),
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
+                        style:
+                            ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(
+                                  color: borderColor,
+                                  width: 2,
+                                ),
+                              ),
+                            ).copyWith(
+                              // Manual Shadow Effect via elevation hack or wrapping container usually,
+                              // but keeping standard button for simplicity here or use Container
+                              shadowColor: WidgetStateProperty.all(
+                                Colors.transparent,
+                              ),
+                            ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
 
                     // 4. LIST ITEM (Cart)
                     if (cartItems.isNotEmpty) ...[
-                      const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Item Tagihan (${cartItems.length})",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const Icon(
-                            Icons.remove,
-                            size: 16,
-                            color: Colors.grey,
+                            "ITEM TAGIHAN (${cartItems.length})",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
                       ...cartItems.map((item) => _buildCartItemCard(item)),
-                      const Divider(height: 30),
+                      const SizedBox(height: 20),
+                      const Divider(thickness: 2, color: Colors.black),
+                      const SizedBox(height: 20),
                     ],
-
-                    // Consumer<TransactionProvider>(
-                    //   builder: (context, provider, child) {
-                    //     if (provider.cart.isEmpty) {
-                    //       return Center(
-                    //         child: Padding(
-                    //           padding: const EdgeInsets.all(20),
-                    //           child: Text(
-                    //             "Belum ada barang",
-                    //             style: TextStyle(color: Colors.grey[500]),
-                    //           ),
-                    //         ),
-                    //       );
-                    //     }
-                    //     return Column(
-                    //       children: provider.cart.map((item) {
-                    //         return Card(
-                    //           margin: const EdgeInsets.only(bottom: 8),
-                    //           child: ListTile(
-                    //             title: Text(item.name),
-                    //             subtitle: Text(
-                    //               "${item.qty} x ${currency.format(item.price)}",
-                    //             ),
-                    //             trailing: IconButton(
-                    //               icon: const Icon(Icons.close, size: 20),
-                    //               onPressed: () {
-                    //                 context
-                    //                     .read<TransactionProvider>()
-                    //                     .removeFromCart(item.variantId);
-                    //               },
-                    //             ),
-                    //           ),
-                    //         );
-                    //       }).toList(),
-                    //     );
-                    //   },
-                    // ),
                   ] else ...[
-                    // --- MODE KEUANGAN (Biaya/Masuk) ---
+                    // --- MODE KEUANGAN ---
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: _selectCategory,
-                        icon: const Icon(
-                          Icons.add_circle,
-                          color: Color(0xFF27AE60),
-                        ),
+                        icon: const Icon(Icons.add, color: Colors.black),
                         label: Text(
                           _selectedCategoryId == null
-                              ? "Tambah Item Pengeluaran"
-                              : "Tambah Sumber",
+                              ? "PILIH KATEGORI"
+                              : "GANTI KATEGORI",
                           style: const TextStyle(
-                            color: Color(0xFF27AE60),
-                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: Color(0xFF27AE60)),
+                        style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: borderColor,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 16),
-                    // Deskripsi Tambahan (Hanya di mode Keuangan sesuai request)
-                    TextField(
-                      controller: _itemDescCtrl,
-                      decoration: InputDecoration(
-                        hintText: "Deskripsi (Misal: Bayar Listrik Bulan Ini)",
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
+                    // Deskripsi Tambahan
+                    Container(
+                      decoration: BoxDecoration(
+                        boxShadow: const [
+                          BoxShadow(
+                            color: shadowColor,
+                            offset: Offset(4, 4),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _itemDescCtrl,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          hintText: "Deskripsi (Cth: Bayar Listrik)",
+                          hintStyle: TextStyle(color: Colors.grey[500]),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: borderColor,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: borderColor,
+                              width: 3,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -409,72 +416,136 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
                   const SizedBox(height: 24),
 
-                  // 4. TOTAL & CATATAN (Footer Umum)
+                  // 4. TOTAL & CATATAN (Footer)
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor, width: 2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: shadowColor,
+                          offset: Offset(4, 4),
+                          blurRadius: 0,
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const Text(
-                              "Total",
+                              "TOTAL TAGIHAN",
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
                               ),
                             ),
                             const Spacer(),
-                            // Jika mode barang, total read-only dari Cart Provider.
-                            // Jika mode keuangan, total bisa diedit manual.
                             SizedBox(
-                              width: 150,
+                              width: 180,
                               child: TextField(
                                 controller: _totalCtrl,
                                 textAlign: TextAlign.right,
                                 keyboardType: TextInputType.number,
-                                // ReadOnly jika ini transaksi barang (karena total dihitung otomatis)
                                 readOnly: _isItemTransaction,
                                 onChanged: (v) => setState(() {}),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight:
+                                      FontWeight.w900, // Angka Besar & Tebal
+                                ),
                                 decoration: const InputDecoration(
                                   prefixText: "Rp ",
+                                  prefixStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                   border: InputBorder.none,
                                   hintText: "0",
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                           ],
                         ),
 
-                        const Divider(),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1.5,
+                          ), // Divider Hitam
+                        ),
 
                         Row(
                           children: [
-                            Checkbox(
-                              value: _isPaidCheckbox,
-                              onChanged: (val) => setState(() {
-                                _isPaidCheckbox = val!;
-                                _paidAmountCtrl.text = _isPaidCheckbox
-                                    ? totalBill.toInt().toString()
-                                    : "0";
-                              }),
+                            // Checkbox Retro
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _isPaidCheckbox = !_isPaidCheckbox;
+                                  _paidAmountCtrl.text = _isPaidCheckbox
+                                      ? totalBill.toInt().toString()
+                                      : "0";
+                                });
+                              },
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: _isPaidCheckbox
+                                      ? Colors.black
+                                      : Colors.white,
+                                  border: Border.all(
+                                    color: borderColor,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: _isPaidCheckbox
+                                    ? const Icon(
+                                        Icons.check,
+                                        size: 18,
+                                        color: Colors.white,
+                                      )
+                                    : null,
+                              ),
                             ),
-                            Text("Lunas"),
-                            Spacer(),
+                            const SizedBox(width: 8),
+                            const Text(
+                              "LUNAS",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+
+                            const Spacer(),
+
                             SizedBox(
-                              width: 120,
+                              width: 140,
                               child: TextField(
                                 controller: _paidAmountCtrl,
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.right,
                                 onChanged: (v) => setState(() {}),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 8,
+                                  ),
+                                  isDense: true,
+                                  hintText: "0",
+                                  fillColor: Colors.grey[100],
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -482,45 +553,6 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // 5. GAMBAR
-                  InkWell(
-                    onTap: _pickImage,
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.add_photo_alternate_outlined,
-                          color: Color(0xFF27AE60),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _selectedImg == null
-                              ? "Tambahkan Gambar"
-                              : "Ubah Gambar",
-                          style: const TextStyle(
-                            color: Color(0xFF27AE60),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                      ],
-                    ),
-                  ),
-                  if (_selectedImg != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(_selectedImg!.path),
-                          height: 120,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -528,28 +560,36 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
 
           // 6. TOMBOL SIMPAN
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: bgCream,
+              border: Border(top: BorderSide(color: borderColor, width: 2)),
+            ),
             child: SizedBox(
               width: double.infinity,
+              height: 56,
               child: ElevatedButton(
                 onPressed: () =>
                     _isFormValid() ? _saveTransaction(trxProvider) : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors
-                      .grey[200], // Default disable color (ubah ke Hijau jika valid)
-                  foregroundColor: _isFormValid()
-                      ? Colors.white
-                      : Colors.black54,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.black, // Hitam Solid
+                  foregroundColor: Colors.white, // Teks Putih
+                  disabledBackgroundColor: Colors.grey[400],
+                  disabledForegroundColor: Colors.grey[700],
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
+                    // Tetap beri border meskipun fill hitam agar konsisten
+                    side: const BorderSide(color: borderColor, width: 2),
                   ),
                 ),
                 child: Text(
-                  _isEditMode ? "Perbarui" : "Simpan",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  _isEditMode ? "PERBARUI DATA" : "SIMPAN TRANSAKSI",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
             ),
@@ -559,31 +599,44 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
     );
   }
 
-  // --- WIDGET HELPER ---
+  // --- WIDGET HELPER (RETRO STYLE) ---
 
   Widget _buildHeaderField(String label, String value, {IconData? icon}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.black, width: 2), // Retro Border
+        boxShadow: const [
+          BoxShadow(color: Colors.black, offset: Offset(3, 3), blurRadius: 0),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: Colors.grey[600],
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 value,
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                   fontSize: 14,
+                  color: Colors.black,
                 ),
               ),
-              if (icon != null) Icon(icon, size: 18, color: Colors.grey),
+              if (icon != null) Icon(icon, size: 18, color: Colors.black),
             ],
           ),
         ],
@@ -597,60 +650,81 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black, width: 2),
+        boxShadow: const [
+          BoxShadow(color: Colors.black, offset: Offset(4, 4), blurRadius: 0),
+        ],
       ),
       child: Row(
         children: [
-          // Icon Avatar Bulat
-          CircleAvatar(
-            backgroundColor: _isItemTransaction
-                ? Colors.blue[50]
-                : Colors.teal[50],
-            child: Text(
-              _selectedPartyName != null
-                  ? _selectedPartyName![0].toUpperCase()
-                  : "?",
-              style: TextStyle(
-                color: _isItemTransaction ? Colors.blue : Colors.teal,
-                fontWeight: FontWeight.bold,
+          // Icon Avatar Bulat dengan Border
+          Container(
+            padding: const EdgeInsets.all(2), // Space antara border dan isi
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.black, width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: _isItemTransaction
+                  ? const Color(0xFF80D8FF)
+                  : const Color(0xFFF9D423), // Biru/Kuning Retro
+              child: Text(
+                _selectedPartyName != null
+                    ? _selectedPartyName![0].toUpperCase()
+                    : "?",
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           // Nama & Label
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _selectedPartyName ?? _selectorLabel,
-                  style: const TextStyle(
+                  _selectorLabel.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    color: Colors.grey[600],
                   ),
                 ),
-                if (_selectedPartyName !=
-                    null) // Jika sudah pilih, tampilkan label kecil
-                  Text(
-                    _selectorLabel,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                const SizedBox(height: 2),
+                Text(
+                  _selectedPartyName ?? "Belum dipilih",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
-          // Tombol Ubah
-          OutlinedButton.icon(
-            onPressed: _selectPartyOrCategory,
-            icon: const Icon(Icons.cached, size: 16, color: Color(0xFF27AE60)),
-            label: const Text(
-              "Ubah",
-              style: TextStyle(color: Color(0xFF27AE60)),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFF27AE60)),
-              shape: RoundedRectangleBorder(
+          // Tombol Ubah (Pill Shape Black)
+          InkWell(
+            onTap: _selectPartyOrCategory,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black,
                 borderRadius: BorderRadius.circular(20),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: const Text(
+                "UBAH",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
             ),
           ),
         ],
@@ -659,13 +733,16 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
   }
 
   Widget _buildCartItemCard(TransactioItem item) {
-    // Tampilan Item sesuai screenshot
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.black, width: 2), // Boxy Border
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, offset: Offset(2, 2), blurRadius: 0),
+        ],
       ),
       child: Column(
         children: [
@@ -679,54 +756,93 @@ class _GenericTransactionFormState extends State<GenericTransactionForm> {
                   children: [
                     Text(
                       item.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      "${item.qty} UNIT x ${currency.format(item.price)}",
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        "${item.qty} x ${currency.format(item.price)}",
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              Row(
-                children: [
-                  Text(
-                    currency.format(item.price * item.qty),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  // Tombol Edit Kecil
-                  InkWell(
-                    onTap: () {
-                      // Logic edit qty (bisa pakai dialog sederhana)
-                    },
-                    child: const Icon(Icons.edit, size: 18, color: Colors.grey),
-                  ),
-                  const SizedBox(width: 8),
-                  // Tombol Hapus Merah
-                  InkWell(
-                    onTap: () => context
-                        .read<TransactionProvider>()
-                        .removeFromCart(item.variantId),
-                    child: const Icon(
-                      Icons.delete,
-                      size: 18,
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                ],
+              // Subtotal di kanan atas
+              Text(
+                currency.format(item.price * item.qty),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                ),
               ),
             ],
           ),
-          const Divider(),
+          const SizedBox(height: 12),
+          // Actions Row (Separated by line)
+          Container(height: 1, color: Colors.grey[300]),
+          const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              const Text("Subtotal", style: TextStyle(color: Colors.grey)),
-              Text(
-                currency.format(item.price * item.qty),
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              InkWell(
+                onTap: () {
+                  /* Logic edit qty */
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.edit, size: 16, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        "Edit",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              InkWell(
+                onTap: () => context.read<TransactionProvider>().removeFromCart(
+                  item.variantId,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.delete, size: 16, color: Colors.red),
+                      SizedBox(width: 4),
+                      Text(
+                        "Hapus",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

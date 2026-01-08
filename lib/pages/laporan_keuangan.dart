@@ -85,7 +85,7 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
             decoration: BoxDecoration(
               color: _bgCream,
               // Opsional: Garis pemisah bawah tipis jika ingin memisahkan area header
-              // border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
             ),
             child: Row(
               children: [
@@ -193,8 +193,7 @@ class _HistoryKeuanganState extends State<HistoryKeuangan> {
                       itemCount: filtered.length,
                       separatorBuilder: (c, i) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        // Asumsi widget ini bisa menyesuaikan diri atau sudah di-style
-                        // Jika belum, sebaiknya widget CardHistoryTransaksi juga diberi border/shadow
+                        
                         return HistoryTransactionCard(filtered[index], context);
                       },
                     ),

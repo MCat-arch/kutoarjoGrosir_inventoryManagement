@@ -1,6 +1,6 @@
 import 'package:kg/models/transaction_model.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:kg/services/database_helper.dart';
+import 'package:kg/utils/database_helper.dart';
 import 'package:kg/models/enums.dart';
 
 class TransactionService {

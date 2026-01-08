@@ -171,7 +171,7 @@ class _PartyPagesState extends State<PartyPages> {
                     ),
                     itemCount: filteredParties.length,
                     itemBuilder: (c, i) {
-                      // Menggunakan buildPartyCard yang sudah diperbaiki sebelumnya
+                     
                       return buildPartyCard(filteredParties[i], context);
                     },
                   ),

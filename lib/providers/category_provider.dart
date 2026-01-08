@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kg/models/account_category_model.dart';
-import 'package:kg/services/database_helper.dart';
+import 'package:kg/utils/database_helper.dart';
 
 class CategoryProvider with ChangeNotifier {
   List<AccountCategoryModel> _categories = [];

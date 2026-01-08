@@ -1,7 +1,7 @@
 import 'package:kg/models/performance_variants_model.dart';
 import 'package:kg/services/algorithms/k_means_produk.dart';
 import 'package:kg/services/algorithms/moving_avg_produk.dart';
-import 'package:kg/services/database_helper.dart';
+import 'package:kg/utils/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SmartAnalysisService {

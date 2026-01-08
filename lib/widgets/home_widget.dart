@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:kg/pages/laporan_keuangan.dart';
 import 'package:kg/pages/list_produk.dart';
 import 'package:kg/pages/party_pages.dart';
+import 'package:kg/providers/auth_provider.dart';
 import 'package:kg/services/sync_service.dart';
 import 'package:kg/widgets/produk_detail.dart';
+import 'package:provider/provider.dart';
 
 class HomeWidget {
   static final NumberFormat _currency = NumberFormat.currency(
@@ -68,15 +70,53 @@ class HomeWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.sync),
+          icon: const Icon(Icons.sync),
           onPressed: () async {
             final syncService = SyncService();
-            await syncService.syncData();
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text("Sync Completed")));
+            final success = await syncService.syncData();
+            if (success) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Sinkronisasi berhasil! Data telah diupload ke cloud.",
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Sinkronisasi gagal. Periksa koneksi internet atau coba lagi.",
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
         ),
+
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () async {
+            final authProvider = Provider.of<AuthProvider>(
+              context,
+              listen: false,
+            );
+            await authProvider.signOut();
+            // Navigation handled by AuthWrapper
+          },
+        ),
+        // IconButton(
+        //   icon: Icon(Icons.sync),
+        //   onPressed: () async {
+        //     final syncService = SyncService();
+        //     await syncService.syncData();
+        //     ScaffoldMessenger.of(
+        //       context,
+        //     ).showSnackBar(SnackBar(content: Text("Sync Completed")));
+        //   },
+        // ),
       ],
     );
   }
@@ -281,6 +321,7 @@ class HomeWidget {
         }),
         _btn("Laporan", Icons.bar_chart_rounded, colorRed, () {
           // TODO: Navigasi ke Laporan
+          Navigator.pushNamed(context, '/transaction');
         }),
       ],
     );

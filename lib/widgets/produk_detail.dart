@@ -127,35 +127,35 @@ showProductDetail(ProductModel product, BuildContext context) {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          product.shopeeStatus.toString() ==
-                              'ShopeeItemStatus.NORMAL'
-                          ? Colors.green[100]
-                          : Colors.red[100],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      product.shopeeStatus
-                          .toString()
-                          .split('.')
-                          .last, // Ambil kata setelah titik
-                      style: TextStyle(
-                        color:
-                            product.shopeeStatus.toString() ==
-                                'ShopeeItemStatus.NORMAL'
-                            ? Colors.green[800]
-                            : Colors.red[800],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(
+                  //     horizontal: 10,
+                  //     vertical: 5,
+                  //   ),
+                  //   decoration: BoxDecoration(
+                  //     color:
+                  //         product.shopeeStatus.toString() ==
+                  //             'ShopeeItemStatus.NORMAL'
+                  //         ? Colors.green[100]
+                  //         : Colors.red[100],
+                  //     borderRadius: BorderRadius.circular(20),
+                  //   ),
+                  //   child: Text(
+                  //     product.shopeeStatus
+                  //         .toString()
+                  //         .split('.')
+                  //         .last, // Ambil kata setelah titik
+                  //     style: TextStyle(
+                  //       color:
+                  //           product.shopeeStatus.toString() ==
+                  //               'ShopeeItemStatus.NORMAL'
+                  //           ? Colors.green[800]
+                  //           : Colors.red[800],
+                  //       fontWeight: FontWeight.bold,
+                  //       fontSize: 12,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
               const SizedBox(height: 20),
